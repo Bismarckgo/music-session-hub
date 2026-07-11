@@ -16,33 +16,52 @@ export type Database = {
     Tables: {
       collaborators: {
         Row: {
+          contact_id: string | null
           created_at: string
           id: string
+          ipi: string | null
           name: string
+          pro: string | null
+          publisher: string | null
           role: string
           split_percent: number
           user_id: string
           work_id: string
         }
         Insert: {
+          contact_id?: string | null
           created_at?: string
           id?: string
+          ipi?: string | null
           name: string
+          pro?: string | null
+          publisher?: string | null
           role: string
           split_percent?: number
           user_id: string
           work_id: string
         }
         Update: {
+          contact_id?: string | null
           created_at?: string
           id?: string
+          ipi?: string | null
           name?: string
+          pro?: string | null
+          publisher?: string | null
           role?: string
           split_percent?: number
           user_id?: string
           work_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "collaborators_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "collaborators_work_id_fkey"
             columns: ["work_id"]
@@ -51,6 +70,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contacts: {
+        Row: {
+          created_at: string
+          default_role: string | null
+          email: string | null
+          id: string
+          ipi: string | null
+          name: string
+          notes: string | null
+          pro: string | null
+          publisher: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_role?: string | null
+          email?: string | null
+          id?: string
+          ipi?: string | null
+          name: string
+          notes?: string | null
+          pro?: string | null
+          publisher?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_role?: string | null
+          email?: string | null
+          id?: string
+          ipi?: string | null
+          name?: string
+          notes?: string | null
+          pro?: string | null
+          publisher?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       sessions: {
         Row: {
@@ -101,6 +162,8 @@ export type Database = {
           fingerprint: string
           genre: string | null
           id: string
+          isrc: string | null
+          iswc: string | null
           musical_key: string | null
           status: string
           title: string
@@ -114,6 +177,8 @@ export type Database = {
           fingerprint?: string
           genre?: string | null
           id?: string
+          isrc?: string | null
+          iswc?: string | null
           musical_key?: string | null
           status?: string
           title: string
@@ -127,6 +192,8 @@ export type Database = {
           fingerprint?: string
           genre?: string | null
           id?: string
+          isrc?: string | null
+          iswc?: string | null
           musical_key?: string | null
           status?: string
           title?: string
