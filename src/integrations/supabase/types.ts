@@ -14,7 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: string
+          split_percent: number
+          user_id: string
+          work_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          role: string
+          split_percent?: number
+          user_id: string
+          work_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+          split_percent?: number
+          user_id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          daw: string | null
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          started_at: string
+          user_id: string
+          work_id: string
+        }
+        Insert: {
+          created_at?: string
+          daw?: string | null
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          started_at?: string
+          user_id: string
+          work_id: string
+        }
+        Update: {
+          created_at?: string
+          daw?: string | null
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          started_at?: string
+          user_id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      works: {
+        Row: {
+          bpm: number | null
+          channels: string[]
+          created_at: string
+          fingerprint: string
+          genre: string | null
+          id: string
+          musical_key: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bpm?: number | null
+          channels?: string[]
+          created_at?: string
+          fingerprint?: string
+          genre?: string | null
+          id?: string
+          musical_key?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bpm?: number | null
+          channels?: string[]
+          created_at?: string
+          fingerprint?: string
+          genre?: string | null
+          id?: string
+          musical_key?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
