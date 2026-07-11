@@ -79,18 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Metatrax — Metadata musical consistente" },
+      { title: "CST — Credit Session Track" },
       {
         name: "description",
         content:
-          "Captura la metadata de tu música desde la sesión en el DAW: fingerprint único, colaboradores, splits y catálogo con visibilidad en canales.",
+          "Centraliza créditos, sesiones, metadata y splits desde el primer minuto de creación. Nunca pierdas un crédito musical.",
       },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Metatrax — Metadata musical consistente" },
+      { property: "og:title", content: "CST — Credit Session Track" },
       {
         property: "og:description",
         content:
-          "Fingerprint único por obra, sesiones de estudio, colaboradores con splits y catálogo del artista.",
+          "Créditos, splits, ISRC/ISWC, IPI, PRO y publishers conectados en un solo lugar.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

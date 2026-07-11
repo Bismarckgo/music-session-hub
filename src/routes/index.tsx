@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Fingerprint, Disc3, Users, Radio } from "lucide-react";
+import { Fingerprint, Disc3, Users, FileText } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,21 +19,21 @@ const features = [
   },
   {
     icon: Fingerprint,
-    title: "Fingerprint único",
+    title: "Fingerprint + ISRC / ISWC",
     description:
-      "Cada obra recibe un identificador único que sigue los datos y mantiene la metadata consistente en todo el proceso.",
+      "Cada canción recibe un fingerprint interno y guarda sus códigos ISRC e ISWC junto a toda su metadata.",
   },
   {
     icon: Users,
-    title: "Colaboradores y splits",
+    title: "Créditos reutilizables",
     description:
-      "Registra quién participa en cada proyecto, su rol y su porcentaje desde el primer día. Sin sorpresas después.",
+      "Compositores, productores, beatmakers, ingenieros y publishers con IPI y PRO — se registran una vez y se reutilizan.",
   },
   {
-    icon: Radio,
-    title: "Catálogo con visibilidad",
+    icon: FileText,
+    title: "Splits + exportaciones",
     description:
-      "El catálogo del artista se aloja en un solo lugar y controla su visibilidad dentro de los canales de distribución.",
+      "Splits sheet en CSV y crédito oficial en PDF listos para firmar, distribuir o enviar a la PRO.",
   },
 ];
 
@@ -50,7 +50,7 @@ function Index() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Fingerprint className="h-5 w-5 text-primary" />
-            <span className="font-display text-lg font-bold">Metatrax</span>
+            <span className="font-display text-lg font-bold">CST</span>
           </div>
           <Button asChild variant={hasSession ? "default" : "outline"}>
             <Link to={hasSession ? "/dashboard" : "/auth"}>
@@ -63,17 +63,17 @@ function Index() {
       <main>
         <section className="mx-auto max-w-4xl px-4 py-24 text-center">
           <p className="mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-            Metadata musical sin inconsistencias
+            Credit Session Track
           </p>
           <h1 className="text-4xl font-bold leading-tight sm:text-6xl">
-            Tu metadata, consistente
+            Cada crédito musical,
             <br />
-            <span className="text-primary">desde la primera sesión</span>
+            <span className="text-primary">desde el primer minuto</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Metatrax genera un fingerprint único por obra, captura la data desde que se abre el
-            DAW y registra a cada colaborador con sus splits — para que tu catálogo llegue limpio a
-            todos los canales.
+            CST centraliza canciones, sesiones, créditos, metadata, splits, ISRC, ISWC, IPI y
+            publishers en un solo lugar. Registra a cada persona una vez y reutilízala en todo tu
+            catálogo — sin fricción, sin créditos perdidos.
           </p>
           <div className="mt-8">
             <Button asChild size="lg">
@@ -98,10 +98,10 @@ function Index() {
       </main>
 
       <footer className="border-t">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-muted-foreground">
-          <span>Metatrax</span>
-          <span>Metadata consistente para tu música</span>
-        </div>
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-muted-foreground">
+            <span>CST — Credit Session Track</span>
+            <span>Nunca pierdas un crédito musical</span>
+          </div>
       </footer>
     </div>
   );

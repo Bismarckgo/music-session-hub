@@ -3,6 +3,7 @@ import type { Tables } from "@/integrations/supabase/types";
 export type Work = Tables<"works">;
 export type StudioSession = Tables<"sessions">;
 export type Collaborator = Tables<"collaborators">;
+export type Contact = Tables<"contacts">;
 
 export const WORK_STATUSES = ["en_progreso", "mezcla", "master", "publicado"] as const;
 
@@ -32,11 +33,27 @@ export const CHANNELS = [
 export const ROLES = [
   "Artista principal",
   "Featuring",
-  "Productor",
   "Compositor",
+  "Productor",
+  "Beatmaker",
   "Ingeniero de mezcla",
   "Ingeniero de master",
+  "Publisher",
   "Músico de sesión",
+] as const;
+
+export const PROS = [
+  "ASCAP",
+  "BMI",
+  "SESAC",
+  "SGAE",
+  "SACM",
+  "SADAIC",
+  "SOCAN",
+  "PRS",
+  "GEMA",
+  "SUISA",
+  "Otra",
 ] as const;
 
 export const DAWS = [

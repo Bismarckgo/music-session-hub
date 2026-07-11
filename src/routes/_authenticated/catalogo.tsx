@@ -43,6 +43,8 @@ function Catalogo() {
   const [genre, setGenre] = useState("");
   const [bpm, setBpm] = useState("");
   const [musicalKey, setMusicalKey] = useState("");
+  const [isrc, setIsrc] = useState("");
+  const [iswc, setIswc] = useState("");
 
   const { data: works, isLoading } = useQuery({
     queryKey: ["works"],
@@ -68,6 +70,8 @@ function Catalogo() {
           genre: genre || null,
           bpm: bpm ? Number(bpm) : null,
           musical_key: musicalKey || null,
+          isrc: isrc || null,
+          iswc: iswc || null,
         })
         .select()
         .single();
@@ -129,6 +133,16 @@ function Catalogo() {
                 <div className="space-y-1.5">
                   <Label htmlFor="w-key">Tonalidad</Label>
                   <Input id="w-key" placeholder="Ej: Am" value={musicalKey} onChange={(e) => setMusicalKey(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="w-isrc">ISRC</Label>
+                  <Input id="w-isrc" placeholder="Opcional" value={isrc} onChange={(e) => setIsrc(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="w-iswc">ISWC</Label>
+                  <Input id="w-iswc" placeholder="Opcional" value={iswc} onChange={(e) => setIswc(e.target.value)} />
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={createWork.isPending}>

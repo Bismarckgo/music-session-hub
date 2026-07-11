@@ -14,8 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Iniciar sesión — Metatrax" },
-      { name: "description", content: "Accede a tu catálogo y sesiones en Metatrax." },
+      { title: "Iniciar sesión — CST" },
+      { name: "description", content: "Accede a tu catálogo, sesiones y créditos en Credit Session Track." },
     ],
   }),
   component: AuthPage,
@@ -82,12 +82,12 @@ function AuthPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2">
           <Fingerprint className="h-6 w-6 text-primary" />
-          <span className="font-display text-xl font-bold">Metatrax</span>
+          <span className="font-display text-xl font-bold">CST</span>
         </div>
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Bienvenido</CardTitle>
-            <CardDescription>Tu metadata musical, consistente desde la primera sesión</CardDescription>
+            <CardDescription>Credit Session Track — cada crédito, desde el primer minuto</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button variant="outline" className="w-full" onClick={signInGoogle}>
