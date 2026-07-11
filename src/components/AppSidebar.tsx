@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, LayoutDashboard, Library, Disc3, LogOut } from "lucide-react";
+import { Fingerprint, LayoutDashboard, Library, Disc3, LogOut, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,6 +20,7 @@ import {
 const items = [
   { title: "Panel", url: "/dashboard", icon: LayoutDashboard },
   { title: "Catálogo", url: "/catalogo", icon: Library },
+  { title: "Contactos", url: "/contactos", icon: Users },
   { title: "Sesiones", url: "/sesiones", icon: Disc3 },
 ];
 
@@ -42,7 +43,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
           <Fingerprint className="h-5 w-5 shrink-0 text-primary" />
-          {!collapsed && <span className="font-display text-base font-bold">Metatrax</span>}
+          {!collapsed && <span className="font-display text-base font-bold">CST</span>}
         </div>
       </SidebarHeader>
       <SidebarContent>
