@@ -104,10 +104,10 @@ function ObraDetail() {
     onError: () => toast.error("No se pudo actualizar la obra"),
   });
 
-  const copyFingerprint = () => {
+  const copyCstid = () => {
     if (!work) return;
     navigator.clipboard.writeText(work.fingerprint);
-    toast.success("Fingerprint copiado");
+    toast.success("CSTID copiado");
   };
 
   if (isLoading || !work) {
@@ -126,7 +126,7 @@ function ObraDetail() {
         <div>
           <h1 className="text-2xl font-bold">{work.title}</h1>
           <button
-            onClick={copyFingerprint}
+            onClick={copyCstid}
             className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs transition-colors hover:bg-accent"
           >
             <Fingerprint className="h-3.5 w-3.5 text-primary" />

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Disc3, Fingerprint } from "lucide-react";
+import { Disc3, Hash } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/catalog";
@@ -63,7 +63,7 @@ function Sesiones() {
                     </Link>
                     <p className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1 font-mono">
-                        <Fingerprint className="h-3 w-3" /> {s.works?.fingerprint}
+                        <Hash className="h-3 w-3" /> {s.works?.fingerprint}
                       </span>
                       {s.daw && <span>· {s.daw}</span>}
                     </p>
