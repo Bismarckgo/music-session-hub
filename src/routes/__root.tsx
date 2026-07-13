@@ -90,11 +90,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Créditos, splits, ISRC/ISWC, IPI, PRO y publishers conectados en un solo lugar.",
+          "Centraliza créditos, sesiones, metadata y splits desde el primer minuto de creación. Nunca pierdas un crédito musical.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "CST — Credit Session Track" },
+      { name: "twitter:description", content: "Centraliza créditos, sesiones, metadata y splits desde el primer minuto de creación. Nunca pierdas un crédito musical." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ee9f7bba-773c-465e-9fdd-df2ebceeea81/id-preview-e658c014--d182a654-6351-4e12-9c5e-2abcc2ecd744.lovable.app-1783962378582.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ee9f7bba-773c-465e-9fdd-df2ebceeea81/id-preview-e658c014--d182a654-6351-4e12-9c5e-2abcc2ecd744.lovable.app-1783962378582.png" },
     ],
     links: [
       {
