@@ -15,7 +15,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedContactosRouteImport } from './routes/_authenticated/contactos'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedObrasIdRouteImport } from './routes/_authenticated/obras.$id'
 
@@ -48,11 +47,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedContactosRoute = AuthenticatedContactosRouteImport.update({
-  id: '/contactos',
-  path: '/contactos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
@@ -69,7 +63,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
-  '/contactos': typeof AuthenticatedContactosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -79,7 +72,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
-  '/contactos': typeof AuthenticatedContactosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -91,7 +83,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
-  '/_authenticated/contactos': typeof AuthenticatedContactosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
   '/_authenticated/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -103,7 +94,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/catalogo'
-    | '/contactos'
     | '/dashboard'
     | '/sesiones'
     | '/obras/$id'
@@ -113,7 +103,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/catalogo'
-    | '/contactos'
     | '/dashboard'
     | '/sesiones'
     | '/obras/$id'
@@ -124,7 +113,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/catalogo'
-    | '/_authenticated/contactos'
     | '/_authenticated/dashboard'
     | '/_authenticated/sesiones'
     | '/_authenticated/obras/$id'
@@ -181,13 +169,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/contactos': {
-      id: '/_authenticated/contactos'
-      path: '/contactos'
-      fullPath: '/contactos'
-      preLoaderRoute: typeof AuthenticatedContactosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/catalogo': {
       id: '/_authenticated/catalogo'
       path: '/catalogo'
@@ -207,7 +188,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
-  AuthenticatedContactosRoute: typeof AuthenticatedContactosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
   AuthenticatedObrasIdRoute: typeof AuthenticatedObrasIdRoute
@@ -215,7 +195,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
-  AuthenticatedContactosRoute: AuthenticatedContactosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
   AuthenticatedObrasIdRoute: AuthenticatedObrasIdRoute,
@@ -233,13 +212,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
