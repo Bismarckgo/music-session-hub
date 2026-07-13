@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Fingerprint, Plus, Trash2, Users, Disc3, FileText, FileDown } from "lucide-react";
+import { ArrowLeft, Copy, Hash, Plus, Trash2, Users, Disc3, FileText, FileDown } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -129,7 +129,7 @@ function ObraDetail() {
             onClick={copyCstid}
             className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs transition-colors hover:bg-accent"
           >
-            <Fingerprint className="h-3.5 w-3.5 text-primary" />
+            <Hash className="h-3.5 w-3.5 text-primary" />
             {work.fingerprint}
             <Copy className="h-3 w-3 text-muted-foreground" />
           </button>
