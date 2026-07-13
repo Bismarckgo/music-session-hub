@@ -1,6 +1,16 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, LayoutDashboard, Library, Disc3, LogOut, Users } from "lucide-react";
+import {
+  Music,
+  LayoutDashboard,
+  Library,
+  Percent,
+  ClipboardList,
+  Activity,
+  Settings,
+  LogOut,
+  Users,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,8 +30,10 @@ import {
 const items = [
   { title: "Panel", url: "/dashboard", icon: LayoutDashboard },
   { title: "Catálogo", url: "/catalogo", icon: Library },
-  { title: "Contactos", url: "/contactos", icon: Users },
-  { title: "Sesiones", url: "/sesiones", icon: Disc3 },
+  { title: "Colaboradores", url: "/colaboradores", icon: Users },
+  { title: "Splits", url: "/splits", icon: Percent },
+  { title: "Registros", url: "/registros", icon: ClipboardList },
+  { title: "Actividad", url: "/actividad", icon: Activity },
 ];
 
 export function AppSidebar() {
@@ -42,7 +54,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <Fingerprint className="h-5 w-5 shrink-0 text-primary" />
+          <Music className="h-5 w-5 shrink-0 text-primary" />
           {!collapsed && <span className="font-display text-base font-bold">CST</span>}
         </div>
       </SidebarHeader>
@@ -67,6 +79,14 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={currentPath.startsWith("/configuracion")}>
+              <Link to="/configuracion" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                {!collapsed && <span>Configuración</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={signOut}>
               <LogOut className="h-4 w-4" />
