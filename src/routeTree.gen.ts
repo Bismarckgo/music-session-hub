@@ -13,10 +13,14 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSplitsRouteImport } from './routes/_authenticated/splits'
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
+import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authenticated/registros'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedContactosRouteImport } from './routes/_authenticated/contactos'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedActividadRouteImport } from './routes/_authenticated/actividad'
 import { Route as AuthenticatedObrasIdRouteImport } from './routes/_authenticated/obras.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -38,9 +42,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSplitsRoute = AuthenticatedSplitsRouteImport.update({
+  id: '/splits',
+  path: '/splits',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSesionesRoute = AuthenticatedSesionesRouteImport.update({
   id: '/sesiones',
   path: '/sesiones',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRegistrosRoute = AuthenticatedRegistrosRouteImport.update({
+  id: '/registros',
+  path: '/registros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -48,14 +62,26 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedContactosRoute = AuthenticatedContactosRouteImport.update({
-  id: '/contactos',
-  path: '/contactos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedConfiguracionRoute =
+  AuthenticatedConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedColaboradoresRoute =
+  AuthenticatedColaboradoresRouteImport.update({
+    id: '/colaboradores',
+    path: '/colaboradores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedActividadRoute = AuthenticatedActividadRouteImport.update({
+  id: '/actividad',
+  path: '/actividad',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedObrasIdRoute = AuthenticatedObrasIdRouteImport.update({
@@ -68,20 +94,28 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actividad': typeof AuthenticatedActividadRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
-  '/contactos': typeof AuthenticatedContactosRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
+  '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actividad': typeof AuthenticatedActividadRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
-  '/contactos': typeof AuthenticatedContactosRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
+  '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
 }
 export interface FileRoutesById {
@@ -90,10 +124,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/actividad': typeof AuthenticatedActividadRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
-  '/_authenticated/contactos': typeof AuthenticatedContactosRoute
+  '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/registros': typeof AuthenticatedRegistrosRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
+  '/_authenticated/splits': typeof AuthenticatedSplitsRoute
   '/_authenticated/obras/$id': typeof AuthenticatedObrasIdRoute
 }
 export interface FileRouteTypes {
@@ -102,20 +140,28 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/sitemap.xml'
+    | '/actividad'
     | '/catalogo'
-    | '/contactos'
+    | '/colaboradores'
+    | '/configuracion'
     | '/dashboard'
+    | '/registros'
     | '/sesiones'
+    | '/splits'
     | '/obras/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/sitemap.xml'
+    | '/actividad'
     | '/catalogo'
-    | '/contactos'
+    | '/colaboradores'
+    | '/configuracion'
     | '/dashboard'
+    | '/registros'
     | '/sesiones'
+    | '/splits'
     | '/obras/$id'
   id:
     | '__root__'
@@ -123,10 +169,14 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/sitemap.xml'
+    | '/_authenticated/actividad'
     | '/_authenticated/catalogo'
-    | '/_authenticated/contactos'
+    | '/_authenticated/colaboradores'
+    | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
+    | '/_authenticated/registros'
     | '/_authenticated/sesiones'
+    | '/_authenticated/splits'
     | '/_authenticated/obras/$id'
   fileRoutesById: FileRoutesById
 }
@@ -167,11 +217,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/splits': {
+      id: '/_authenticated/splits'
+      path: '/splits'
+      fullPath: '/splits'
+      preLoaderRoute: typeof AuthenticatedSplitsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sesiones': {
       id: '/_authenticated/sesiones'
       path: '/sesiones'
       fullPath: '/sesiones'
       preLoaderRoute: typeof AuthenticatedSesionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/registros': {
+      id: '/_authenticated/registros'
+      path: '/registros'
+      fullPath: '/registros'
+      preLoaderRoute: typeof AuthenticatedRegistrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -181,11 +245,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/contactos': {
-      id: '/_authenticated/contactos'
-      path: '/contactos'
-      fullPath: '/contactos'
-      preLoaderRoute: typeof AuthenticatedContactosRouteImport
+    '/_authenticated/configuracion': {
+      id: '/_authenticated/configuracion'
+      path: '/configuracion'
+      fullPath: '/configuracion'
+      preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/colaboradores': {
+      id: '/_authenticated/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/catalogo': {
@@ -193,6 +264,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogo'
       fullPath: '/catalogo'
       preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/actividad': {
+      id: '/_authenticated/actividad'
+      path: '/actividad'
+      fullPath: '/actividad'
+      preLoaderRoute: typeof AuthenticatedActividadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/obras/$id': {
@@ -206,18 +284,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActividadRoute: typeof AuthenticatedActividadRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
-  AuthenticatedContactosRoute: typeof AuthenticatedContactosRoute
+  AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedRegistrosRoute: typeof AuthenticatedRegistrosRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
+  AuthenticatedSplitsRoute: typeof AuthenticatedSplitsRoute
   AuthenticatedObrasIdRoute: typeof AuthenticatedObrasIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActividadRoute: AuthenticatedActividadRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
-  AuthenticatedContactosRoute: AuthenticatedContactosRoute,
+  AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedRegistrosRoute: AuthenticatedRegistrosRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
+  AuthenticatedSplitsRoute: AuthenticatedSplitsRoute,
   AuthenticatedObrasIdRoute: AuthenticatedObrasIdRoute,
 }
 

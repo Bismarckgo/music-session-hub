@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Fingerprint, Disc3, Users, FileText } from "lucide-react";
+import { Hash, Disc3, Users, FileText } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,10 @@ const features = [
       "La data se registra desde que abres la sesión de producción: DAW, fecha, duración y notas de cada sesión.",
   },
   {
-    icon: Fingerprint,
-    title: "Fingerprint + ISRC / ISWC",
+    icon: Hash,
+    title: "CSTID + ISRC / ISWC",
     description:
-      "Cada canción recibe un fingerprint interno y guarda sus códigos ISRC e ISWC junto a toda su metadata.",
+      "Cada obra recibe un CSTID permanente y guarda sus códigos ISRC e ISWC junto a toda su metadata.",
   },
   {
     icon: Users,
@@ -49,7 +49,7 @@ function Index() {
       <header className="border-b">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <Fingerprint className="h-5 w-5 text-primary" />
+            <Hash className="h-5 w-5 text-primary" />
             <span className="font-display text-lg font-bold">CST</span>
           </div>
           <Button asChild variant={hasSession ? "default" : "outline"}>

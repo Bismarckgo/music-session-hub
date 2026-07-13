@@ -9,7 +9,7 @@ export function downloadSplitCSV(work: Work, collaborators: Collaborator[]) {
   const total = collaborators.reduce((a, c) => a + Number(c.split_percent), 0);
   const header = [
     "Canción",
-    "Fingerprint",
+    "CSTID",
     "ISRC",
     "ISWC",
     "Género",
@@ -106,7 +106,7 @@ export function openCreditsPDF(work: Work, collaborators: Collaborator[]) {
 <body>
   <div class="actions noprint"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>
   <h1>${escapeHtml(work.title)}</h1>
-  <p class="fp">Fingerprint · ${escapeHtml(work.fingerprint)}</p>
+  <p class="fp">CSTID · ${escapeHtml(work.fingerprint)}</p>
   <div class="meta">
     <div><label>ISRC</label><span>${escapeHtml(work.isrc ?? "—")}</span></div>
     <div><label>ISWC</label><span>${escapeHtml(work.iswc ?? "—")}</span></div>

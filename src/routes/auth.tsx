@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Fingerprint } from "lucide-react";
+import { Music } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -81,7 +81,7 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary px-4">
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2">
-          <Fingerprint className="h-6 w-6 text-primary" />
+          <Music className="h-6 w-6 text-primary" />
           <span className="font-display text-xl font-bold">CST</span>
         </div>
         <Card>
