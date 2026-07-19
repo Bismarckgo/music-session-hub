@@ -1,13 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Hash, Plus, Trash2, Users, Disc3, FileText, FileDown } from "lucide-react";
+import { ArrowLeft, Copy, Hash, Plus, Trash2, Users, Disc3, FileText, FileDown, Upload, Image as ImageIcon, ExternalLink, Radio } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
   CHANNELS,
+  CHANNEL_URL_PATTERNS,
   DAWS,
+  DISTRIBUTORS,
+  DIST_STATUSES,
+  DIST_STATUS_LABELS,
   PROS,
   ROLES,
   STATUS_LABELS,
@@ -18,6 +22,7 @@ import {
   type StudioSession,
   type Work,
 } from "@/lib/catalog";
+import { useCoverUrl } from "@/hooks/use-cover-urls";
 import { downloadSplitCSV, openCreditsPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,16 +128,19 @@ function ObraDetail() {
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{work.title}</h1>
-          <button
-            onClick={copyCstid}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs transition-colors hover:bg-accent"
-          >
-            <Hash className="h-3.5 w-3.5 text-primary" />
-            {work.fingerprint}
-            <Copy className="h-3 w-3 text-muted-foreground" />
-          </button>
+        <div className="flex items-center gap-4">
+          <CoverThumb work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+          <div>
+            <h1 className="text-2xl font-bold">{work.title}</h1>
+            <button
+              onClick={copyCstid}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs transition-colors hover:bg-accent"
+            >
+              <Hash className="h-3.5 w-3.5 text-primary" />
+              {work.fingerprint}
+              <Copy className="h-3 w-3 text-muted-foreground" />
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -172,31 +180,9 @@ function ObraDetail() {
       <div className="grid gap-6 lg:grid-cols-2">
         <MetadataCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Visibilidad en canales</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {CHANNELS.map((ch) => {
-              const active = work.channels.includes(ch);
-              return (
-                <div key={ch} className="flex items-center justify-between rounded-lg border px-3 py-2">
-                  <span className="text-sm">{ch}</span>
-                  <Switch
-                    checked={active}
-                    onCheckedChange={(checked) =>
-                      updateWork.mutate({
-                        channels: checked
-                          ? [...work.channels, ch]
-                          : work.channels.filter((c) => c !== ch),
-                      })
-                    }
-                  />
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <ChannelsCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+
+        <DistributionCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
 
         <CollaboratorsCard
           workId={id}
@@ -207,6 +193,243 @@ function ObraDetail() {
         <SessionsCard workId={id} sessions={sessions ?? []} />
       </div>
     </div>
+  );
+}
+
+function CoverThumb({
+  work,
+  onUpdate,
+}: {
+  work: Work;
+  onUpdate: (patch: Partial<Work>) => void;
+}) {
+  const url = useCoverUrl(work.cover_path);
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Sin sesión");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${userData.user.id}/${work.id}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("covers")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      if (work.cover_path) {
+        await supabase.storage.from("covers").remove([work.cover_path]);
+      }
+      onUpdate({ cover_path: path });
+      queryClient.invalidateQueries({ queryKey: ["cover-urls"] });
+      toast.success("Carátula actualizada");
+    } catch (e) {
+      toast.error("No se pudo subir la carátula");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => inputRef.current?.click()}
+      className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-secondary"
+      title="Cambiar carátula"
+    >
+      {url ? (
+        <img src={url} alt={`Carátula de ${work.title}`} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+          <ImageIcon className="h-6 w-6" />
+        </div>
+      )}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+        {uploading ? (
+          <span className="text-[10px] font-medium text-white">Subiendo…</span>
+        ) : (
+          <Upload className="h-5 w-5 text-white" />
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.target.value = "";
+        }}
+      />
+    </button>
+  );
+}
+
+function ChannelsCard({
+  work,
+  onUpdate,
+}: {
+  work: Work;
+  onUpdate: (patch: Partial<Work>) => void;
+}) {
+  const links = (work.channel_links ?? {}) as Record<string, string>;
+  const [drafts, setDrafts] = useState<Record<string, string>>(links);
+
+  const commit = (ch: string, value: string) => {
+    const next = { ...links };
+    if (value.trim()) next[ch] = value.trim();
+    else delete next[ch];
+    if ((links[ch] ?? "") !== (next[ch] ?? "")) onUpdate({ channel_links: next });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Visibilidad en canales</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {CHANNELS.map((ch) => {
+          const active = work.channels.includes(ch);
+          const url = drafts[ch] ?? "";
+          return (
+            <div key={ch} className="space-y-1.5 rounded-lg border px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{ch}</span>
+                <div className="flex items-center gap-2">
+                  {url && (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-primary"
+                      title="Abrir"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  <Switch
+                    checked={active}
+                    onCheckedChange={(checked) =>
+                      onUpdate({
+                        channels: checked
+                          ? [...work.channels, ch]
+                          : work.channels.filter((c) => c !== ch),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <Input
+                value={url}
+                placeholder={CHANNEL_URL_PATTERNS[ch] ?? "https://…"}
+                onChange={(e) => setDrafts({ ...drafts, [ch]: e.target.value })}
+                onBlur={(e) => commit(ch, e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DistributionCard({
+  work,
+  onUpdate,
+}: {
+  work: Work;
+  onUpdate: (patch: Partial<Work>) => void;
+}) {
+  const [distUrl, setDistUrl] = useState(work.distributor_url ?? "");
+  const distName = work.distributor_name ?? "";
+  const preset = DISTRIBUTORS.find((d) => d.name === distName);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Radio className="h-4 w-4 text-primary" /> Distribución
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Distribuidora</Label>
+            <Select
+              value={distName || "__none"}
+              onValueChange={(v) =>
+                onUpdate({ distributor_name: v === "__none" ? null : v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">—</SelectItem>
+                {DISTRIBUTORS.map((d) => (
+                  <SelectItem key={d.name} value={d.name}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Estado</Label>
+            <Select
+              value={work.distribution_status}
+              onValueChange={(v) => onUpdate({ distribution_status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DIST_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {DIST_STATUS_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Link del release</Label>
+          <div className="flex gap-2">
+            <Input
+              value={distUrl}
+              placeholder="https://…"
+              onChange={(e) => setDistUrl(e.target.value)}
+              onBlur={() => {
+                if ((work.distributor_url ?? "") !== distUrl)
+                  onUpdate({ distributor_url: distUrl || null });
+              }}
+            />
+            {distUrl && (
+              <Button variant="outline" size="icon" asChild>
+                <a href={distUrl} target="_blank" rel="noreferrer" aria-label="Abrir">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+        {preset?.url && (
+          <a
+            href={preset.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            Abrir {preset.name} <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

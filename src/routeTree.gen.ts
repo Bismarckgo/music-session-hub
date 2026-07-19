@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSplitsRouteImport } from './routes/_authenticated/splits'
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
 import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authenticated/registros'
+import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
@@ -57,6 +58,12 @@ const AuthenticatedRegistrosRoute = AuthenticatedRegistrosRouteImport.update({
   path: '/registros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDistribucionRoute =
+  AuthenticatedDistribucionRouteImport.update({
+    id: '/distribucion',
+    path: '/distribucion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/distribucion': typeof AuthenticatedDistribucionRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
@@ -113,6 +121,7 @@ export interface FileRoutesByTo {
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/distribucion': typeof AuthenticatedDistribucionRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
@@ -129,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
   '/_authenticated/registros': typeof AuthenticatedRegistrosRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
   '/_authenticated/splits': typeof AuthenticatedSplitsRoute
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/configuracion'
     | '/dashboard'
+    | '/distribucion'
     | '/registros'
     | '/sesiones'
     | '/splits'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/configuracion'
     | '/dashboard'
+    | '/distribucion'
     | '/registros'
     | '/sesiones'
     | '/splits'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/colaboradores'
     | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
+    | '/_authenticated/distribucion'
     | '/_authenticated/registros'
     | '/_authenticated/sesiones'
     | '/_authenticated/splits'
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRegistrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/distribucion': {
+      id: '/_authenticated/distribucion'
+      path: '/distribucion'
+      fullPath: '/distribucion'
+      preLoaderRoute: typeof AuthenticatedDistribucionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -289,6 +309,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
   AuthenticatedRegistrosRoute: typeof AuthenticatedRegistrosRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
   AuthenticatedSplitsRoute: typeof AuthenticatedSplitsRoute
@@ -301,6 +322,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
   AuthenticatedRegistrosRoute: AuthenticatedRegistrosRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
   AuthenticatedSplitsRoute: AuthenticatedSplitsRoute,
