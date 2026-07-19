@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Users,
+  Radio,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,7 @@ const items = [
   { title: "Catálogo", url: "/catalogo", icon: Library },
   { title: "Colaboradores", url: "/colaboradores", icon: Users },
   { title: "Splits", url: "/splits", icon: Percent },
+  { title: "Distribución", url: "/distribucion", icon: Radio },
   { title: "Registros", url: "/registros", icon: ClipboardList },
   { title: "Actividad", url: "/actividad", icon: Activity },
 ];

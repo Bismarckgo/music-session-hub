@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Hash, Search, ArrowUpDown } from "lucide-react";
+import { Plus, Hash, Search, ArrowUpDown, Upload, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -13,6 +13,7 @@ import {
   type StudioSession,
   type Work,
 } from "@/lib/catalog";
+import { useCoverUrls } from "@/hooks/use-cover-urls";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -111,6 +113,8 @@ function Catalogo() {
       return data as WorkRow[];
     },
   });
+
+  const { data: coverMap } = useCoverUrls((works ?? []).map((w) => w.cover_path));
 
   const createWork = useMutation({
     mutationFn: async () => {
@@ -245,6 +249,8 @@ function Catalogo() {
         </Dialog>
       </div>
 
+      <CSVImport />
+
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -309,16 +315,33 @@ function Catalogo() {
               rows.map(({ work: w, artist, durationMin, activity }) => (
                 <TableRow key={w.id}>
                   <TableCell>
-                    <Link
-                      to="/obras/$id"
-                      params={{ id: w.id }}
-                      className="font-medium hover:text-primary"
-                    >
-                      {w.title}
-                    </Link>
-                    <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
-                      <Hash className="h-3 w-3" /> {w.fingerprint}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-secondary">
+                        {w.cover_path && coverMap?.[w.cover_path] ? (
+                          <img
+                            src={coverMap[w.cover_path]}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                            <ImageIcon className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <Link
+                          to="/obras/$id"
+                          params={{ id: w.id }}
+                          className="font-medium hover:text-primary"
+                        >
+                          {w.title}
+                        </Link>
+                        <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                          <Hash className="h-3 w-3" /> {w.fingerprint}
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {artist ? (
@@ -360,6 +383,184 @@ function Catalogo() {
             )}
           </TableBody>
         </Table>
+      </div>
+    </div>
+  );
+}
+
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length < 2) return [];
+  const parseLine = (line: string): string[] => {
+    const out: string[] = [];
+    let cur = "";
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQ) {
+        if (ch === '"' && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else if (ch === '"') {
+          inQ = false;
+        } else {
+          cur += ch;
+        }
+      } else if (ch === '"') {
+        inQ = true;
+      } else if (ch === "," || ch === ";") {
+        out.push(cur);
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map((s) => s.trim());
+  };
+  const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+  return lines.slice(1).map((line) => {
+    const cells = parseLine(line);
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+    return row;
+  });
+}
+
+const FIELD_ALIASES: Record<string, string[]> = {
+  title: ["title", "titulo", "título", "track", "song", "canción", "cancion", "obra"],
+  isrc: ["isrc"],
+  iswc: ["iswc"],
+  genre: ["genre", "género", "genero"],
+  bpm: ["bpm", "tempo"],
+  musical_key: ["key", "tonalidad", "musical_key"],
+  status: ["status", "estado"],
+};
+
+function pick(row: Record<string, string>, field: string): string | null {
+  for (const key of FIELD_ALIASES[field] ?? [field]) {
+    if (row[key] != null && row[key] !== "") return row[key];
+  }
+  return null;
+}
+
+function CSVImport() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const importMut = useMutation({
+    mutationFn: async (file: File) => {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (!rows.length) throw new Error("CSV vacío");
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Sin sesión");
+      const userId = userData.user.id;
+
+      // Fetch existing works to skip duplicates by title (case-insensitive) or ISRC
+      const { data: existing } = await supabase
+        .from("works")
+        .select("title, isrc");
+      const existingTitles = new Set((existing ?? []).map((w) => w.title.toLowerCase()));
+      const existingIsrcs = new Set(
+        (existing ?? []).map((w) => w.isrc).filter(Boolean) as string[],
+      );
+
+      let imported = 0;
+      let skipped = 0;
+      const toInsert: {
+        user_id: string;
+        title: string;
+        isrc: string | null;
+        iswc: string | null;
+        genre: string | null;
+        bpm: number | null;
+        musical_key: string | null;
+        status: string;
+      }[] = [];
+
+      for (const row of rows) {
+        const title = pick(row, "title");
+        if (!title) {
+          skipped++;
+          continue;
+        }
+        const isrc = pick(row, "isrc");
+        if (existingTitles.has(title.toLowerCase()) || (isrc && existingIsrcs.has(isrc))) {
+          skipped++;
+          continue;
+        }
+        existingTitles.add(title.toLowerCase());
+        if (isrc) existingIsrcs.add(isrc);
+        const bpmRaw = pick(row, "bpm");
+        const rawStatus = (pick(row, "status") ?? "").toLowerCase().replace(/\s+/g, "_");
+        const status = WORK_STATUSES.includes(rawStatus as (typeof WORK_STATUSES)[number])
+          ? rawStatus
+          : "en_progreso";
+        toInsert.push({
+          user_id: userId,
+          title,
+          isrc: isrc || null,
+          iswc: pick(row, "iswc"),
+          genre: pick(row, "genre"),
+          bpm: bpmRaw ? Number(bpmRaw) || null : null,
+          musical_key: pick(row, "musical_key"),
+          status,
+        });
+      }
+
+      if (toInsert.length) {
+        const { error } = await supabase.from("works").insert(toInsert);
+        if (error) throw error;
+        imported = toInsert.length;
+      }
+      return { imported, skipped };
+    },
+    onSuccess: ({ imported, skipped }) => {
+      queryClient.invalidateQueries({ queryKey: ["works"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      toast.success(
+        `Importadas ${imported} obra${imported === 1 ? "" : "s"}${
+          skipped ? ` · ${skipped} omitida${skipped === 1 ? "" : "s"}` : ""
+        }`,
+      );
+    },
+    onError: (e: Error) => toast.error(e.message || "No se pudo importar el CSV"),
+  });
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-muted/30 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <FileSpreadsheet className="h-5 w-5 text-primary" />
+        <div>
+          <p className="text-sm font-medium">Importar catálogo desde CSV</p>
+          <p className="text-xs text-muted-foreground">
+            Columnas soportadas: title, isrc, iswc, genre, bpm, key, status. Se omiten títulos e ISRC duplicados.
+          </p>
+        </div>
+      </div>
+      <div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) importMut.mutate(f);
+            e.target.value = "";
+          }}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={importMut.isPending}
+        >
+          <Upload className="mr-1 h-4 w-4" />
+          {importMut.isPending ? "Importando…" : "Subir CSV"}
+        </Button>
       </div>
     </div>
   );

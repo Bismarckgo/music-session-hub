@@ -157,8 +157,13 @@ export type Database = {
       works: {
         Row: {
           bpm: number | null
+          channel_links: Json
           channels: string[]
+          cover_path: string | null
           created_at: string
+          distribution_status: string
+          distributor_name: string | null
+          distributor_url: string | null
           fingerprint: string
           genre: string | null
           id: string
@@ -172,8 +177,13 @@ export type Database = {
         }
         Insert: {
           bpm?: number | null
+          channel_links?: Json
           channels?: string[]
+          cover_path?: string | null
           created_at?: string
+          distribution_status?: string
+          distributor_name?: string | null
+          distributor_url?: string | null
           fingerprint?: string
           genre?: string | null
           id?: string
@@ -187,8 +197,13 @@ export type Database = {
         }
         Update: {
           bpm?: number | null
+          channel_links?: Json
           channels?: string[]
+          cover_path?: string | null
           created_at?: string
+          distribution_status?: string
+          distributor_name?: string | null
+          distributor_url?: string | null
           fingerprint?: string
           genre?: string | null
           id?: string
