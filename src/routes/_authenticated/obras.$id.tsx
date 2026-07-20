@@ -211,6 +211,7 @@ function CoverThumb({
   const [uploading, setUploading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const deezerFn = useServerFn(fetchDeezerCoverByISRC);
+  const autoTriedRef = useRef<string | null>(null);
 
   const onFile = async (file: File) => {
     setUploading(true);
@@ -236,9 +237,10 @@ function CoverThumb({
     }
   };
 
-  const fetchFromDeezer = async () => {
+  const fetchFromDeezer = async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
     if (!work.isrc) {
-      toast.error("Añade el ISRC primero para buscar en Deezer");
+      if (!silent) toast.error("Añade el ISRC primero para buscar el cover art");
       return;
     }
     setFetching(true);
@@ -263,15 +265,28 @@ function CoverThumb({
       queryClient.invalidateQueries({ queryKey: ["cover-urls"] });
       toast.success(
         result.artist && result.album
-          ? `Carátula de Deezer: ${result.artist} — ${result.album}`
-          : "Carátula importada desde Deezer",
+          ? `Cover art encontrado: ${result.artist} — ${result.album}`
+          : "Cover art importado",
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "No se pudo obtener la carátula desde Deezer");
+      if (!silent) {
+        toast.error(e instanceof Error ? e.message : "No se pudo obtener el cover art");
+      }
     } finally {
       setFetching(false);
     }
   };
+
+  // Búsqueda automática al detectar un ISRC sin carátula todavía.
+  useEffect(() => {
+    if (!work.isrc) return;
+    if (work.cover_path) return;
+    if (fetching) return;
+    if (autoTriedRef.current === work.isrc) return;
+    autoTriedRef.current = work.isrc;
+    fetchFromDeezer({ silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [work.isrc, work.cover_path]);
 
   return (
     <div className="flex shrink-0 flex-col items-center gap-1.5">
@@ -309,13 +324,13 @@ function CoverThumb({
       </button>
       <button
         type="button"
-        onClick={fetchFromDeezer}
+        onClick={() => fetchFromDeezer()}
         disabled={fetching || !work.isrc}
         className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
-        title={work.isrc ? "Buscar carátula en Deezer por ISRC" : "Añade el ISRC primero"}
+        title={work.isrc ? "Buscar cover art por ISRC" : "Añade el ISRC primero"}
       >
         <Sparkles className="h-3 w-3" />
-        {fetching ? "Buscando…" : "Deezer"}
+        {fetching ? "Buscando…" : "Buscar cover art"}
       </button>
     </div>
   );
