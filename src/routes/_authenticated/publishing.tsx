@@ -5,6 +5,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, AlertTriangle, Download, Search, FileText } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+const sb = supabase as unknown as {
+  from: (t: string) => {
+    select: (q?: string) => {
+      maybeSingle: () => Promise<{ data: unknown }>;
+      eq: (c: string, v: string) => Promise<{ data: unknown }>;
+    } & Promise<{ data: unknown }>;
+    insert: (v: unknown) => Promise<{ data: unknown; error: unknown }>;
+    update: (v: unknown) => { eq: (c: string, v: string) => Promise<{ data: unknown }> };
+  };
+};
 import { type Work, type Collaborator } from "@/lib/catalog";
 import {
   PUBLISHING_PLATFORMS,
@@ -56,10 +66,7 @@ function PublishingPage() {
   const { data: profile } = useQuery({
     queryKey: ["publishing_profile"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("publishing_profiles" as never)
-        .select("*")
-        .maybeSingle();
+      const { data } = await sb.from("publishing_profiles").select("*").maybeSingle();
       return (data as PublishingProfile | null) ?? null;
     },
   });
@@ -79,7 +86,7 @@ function PublishingPage() {
   const { data: registrations } = useQuery({
     queryKey: ["work_registrations"],
     queryFn: async () => {
-      const { data } = await supabase.from("work_registrations" as never).select("*");
+      const { data } = await sb.from("work_registrations").select("*");
       return (data as WorkRegistration[] | null) ?? [];
     },
   });
@@ -105,12 +112,12 @@ function PublishingPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("No auth");
       if (existing) {
-        await supabase
-          .from("work_registrations" as never)
+        await sb
+          .from("work_registrations")
           .update({ status: v.status, last_checked: new Date().toISOString() })
           .eq("id", existing.id);
       } else {
-        await supabase.from("work_registrations" as never).insert({
+        await sb.from("work_registrations").insert({
           user_id: u.user.id,
           work_id: v.work_id,
           platform: v.platform,
