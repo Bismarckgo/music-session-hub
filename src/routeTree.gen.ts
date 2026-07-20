@@ -19,6 +19,7 @@ import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPublishingRouteImport } from './routes/_authenticated/publishing'
 import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedActividadRouteImport } from './routes/_authenticated/actividad'
@@ -74,6 +75,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConfiguracionRoute =
+  AuthenticatedConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedColaboradoresRoute =
   AuthenticatedColaboradoresRouteImport.update({
     id: '/colaboradores',
@@ -103,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/actividad': typeof AuthenticatedActividadRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/actividad': typeof AuthenticatedActividadRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
@@ -135,6 +144,7 @@ export interface FileRoutesById {
   '/_authenticated/actividad': typeof AuthenticatedActividadRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
   '/_authenticated/publishing': typeof AuthenticatedPublishingRoute
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/actividad'
     | '/catalogo'
     | '/colaboradores'
+    | '/configuracion'
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/actividad'
     | '/catalogo'
     | '/colaboradores'
+    | '/configuracion'
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
@@ -183,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/actividad'
     | '/_authenticated/catalogo'
     | '/_authenticated/colaboradores'
+    | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
     | '/_authenticated/distribucion'
     | '/_authenticated/publishing'
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/configuracion': {
+      id: '/_authenticated/configuracion'
+      path: '/configuracion'
+      fullPath: '/configuracion'
+      preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/colaboradores': {
       id: '/_authenticated/colaboradores'
       path: '/colaboradores'
@@ -306,6 +326,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActividadRoute: typeof AuthenticatedActividadRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
   AuthenticatedPublishingRoute: typeof AuthenticatedPublishingRoute
@@ -319,6 +340,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActividadRoute: AuthenticatedActividadRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
   AuthenticatedPublishingRoute: AuthenticatedPublishingRoute,
