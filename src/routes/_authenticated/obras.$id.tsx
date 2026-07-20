@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Hash, Plus, Trash2, Users, Disc3, FileText, FileDown, Upload, Image as ImageIcon, ExternalLink, Radio } from "lucide-react";
+import { ArrowLeft, Copy, Hash, Plus, Trash2, Users, Disc3, FileText, FileDown, Upload, Image as ImageIcon, ExternalLink, Radio, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { fetchDeezerCoverByISRC } from "@/lib/deezer.functions";
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -207,6 +209,8 @@ function CoverThumb({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const deezerFn = useServerFn(fetchDeezerCoverByISRC);
 
   const onFile = async (file: File) => {
     setUploading(true);
@@ -232,39 +236,88 @@ function CoverThumb({
     }
   };
 
+  const fetchFromDeezer = async () => {
+    if (!work.isrc) {
+      toast.error("Añade el ISRC primero para buscar en Deezer");
+      return;
+    }
+    setFetching(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Sin sesión");
+      const result = await deezerFn({ data: { isrc: work.isrc } });
+      const bin = atob(result.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: result.contentType });
+      const ext = result.contentType.includes("png") ? "png" : "jpg";
+      const path = `${userData.user.id}/${work.id}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("covers")
+        .upload(path, blob, { upsert: true, contentType: result.contentType });
+      if (error) throw error;
+      if (work.cover_path) {
+        await supabase.storage.from("covers").remove([work.cover_path]);
+      }
+      onUpdate({ cover_path: path });
+      queryClient.invalidateQueries({ queryKey: ["cover-urls"] });
+      toast.success(
+        result.artist && result.album
+          ? `Carátula de Deezer: ${result.artist} — ${result.album}`
+          : "Carátula importada desde Deezer",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo obtener la carátula desde Deezer");
+    } finally {
+      setFetching(false);
+    }
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => inputRef.current?.click()}
-      className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-secondary"
-      title="Cambiar carátula"
-    >
-      {url ? (
-        <img src={url} alt={`Carátula de ${work.title}`} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-          <ImageIcon className="h-6 w-6" />
-        </div>
-      )}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-        {uploading ? (
-          <span className="text-[10px] font-medium text-white">Subiendo…</span>
+    <div className="flex shrink-0 flex-col items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="group relative h-20 w-20 overflow-hidden rounded-lg border bg-secondary"
+        title="Cambiar carátula"
+      >
+        {url ? (
+          <img src={url} alt={`Carátula de ${work.title}`} className="h-full w-full object-cover" />
         ) : (
-          <Upload className="h-5 w-5 text-white" />
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+            <ImageIcon className="h-6 w-6" />
+          </div>
         )}
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = "";
-        }}
-      />
-    </button>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+          {uploading ? (
+            <span className="text-[10px] font-medium text-white">Subiendo…</span>
+          ) : (
+            <Upload className="h-5 w-5 text-white" />
+          )}
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+            e.target.value = "";
+          }}
+        />
+      </button>
+      <button
+        type="button"
+        onClick={fetchFromDeezer}
+        disabled={fetching || !work.isrc}
+        className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+        title={work.isrc ? "Buscar carátula en Deezer por ISRC" : "Añade el ISRC primero"}
+      >
+        <Sparkles className="h-3 w-3" />
+        {fetching ? "Buscando…" : "Deezer"}
+      </button>
+    </div>
   );
 }
 
