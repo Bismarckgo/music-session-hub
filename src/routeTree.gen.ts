@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSplitsRouteImport } from './routes/_authenticated/splits'
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
 import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authenticated/registros'
+import { Route as AuthenticatedPublishingRouteImport } from './routes/_authenticated/publishing'
 import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
@@ -56,6 +57,11 @@ const AuthenticatedSesionesRoute = AuthenticatedSesionesRouteImport.update({
 const AuthenticatedRegistrosRoute = AuthenticatedRegistrosRouteImport.update({
   id: '/registros',
   path: '/registros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPublishingRoute = AuthenticatedPublishingRouteImport.update({
+  id: '/publishing',
+  path: '/publishing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDistribucionRoute =
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
+  '/publishing': typeof AuthenticatedPublishingRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
+  '/publishing': typeof AuthenticatedPublishingRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
+  '/_authenticated/publishing': typeof AuthenticatedPublishingRoute
   '/_authenticated/registros': typeof AuthenticatedRegistrosRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
   '/_authenticated/splits': typeof AuthenticatedSplitsRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/dashboard'
     | '/distribucion'
+    | '/publishing'
     | '/registros'
     | '/sesiones'
     | '/splits'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/dashboard'
     | '/distribucion'
+    | '/publishing'
     | '/registros'
     | '/sesiones'
     | '/splits'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
     | '/_authenticated/distribucion'
+    | '/_authenticated/publishing'
     | '/_authenticated/registros'
     | '/_authenticated/sesiones'
     | '/_authenticated/splits'
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRegistrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/publishing': {
+      id: '/_authenticated/publishing'
+      path: '/publishing'
+      fullPath: '/publishing'
+      preLoaderRoute: typeof AuthenticatedPublishingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/distribucion': {
       id: '/_authenticated/distribucion'
       path: '/distribucion'
@@ -310,6 +329,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
+  AuthenticatedPublishingRoute: typeof AuthenticatedPublishingRoute
   AuthenticatedRegistrosRoute: typeof AuthenticatedRegistrosRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
   AuthenticatedSplitsRoute: typeof AuthenticatedSplitsRoute
@@ -323,6 +343,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
+  AuthenticatedPublishingRoute: AuthenticatedPublishingRoute,
   AuthenticatedRegistrosRoute: AuthenticatedRegistrosRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
   AuthenticatedSplitsRoute: AuthenticatedSplitsRoute,

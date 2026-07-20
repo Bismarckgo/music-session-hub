@@ -11,6 +11,7 @@ import {
   LogOut,
   Users,
   Radio,
+  BookOpen,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ const items = [
   { title: "Colaboradores", url: "/colaboradores", icon: Users },
   { title: "Splits", url: "/splits", icon: Percent },
   { title: "Distribución", url: "/distribucion", icon: Radio },
+  { title: "Publishing", url: "/publishing", icon: BookOpen },
   { title: "Registros", url: "/registros", icon: ClipboardList },
   { title: "Actividad", url: "/actividad", icon: Activity },
 ];
