@@ -113,6 +113,48 @@ export type Database = {
         }
         Relationships: []
       }
+      publishing_profiles: {
+        Row: {
+          created_at: string
+          external_identifiers: Json
+          id: string
+          last_sync: string | null
+          pro: string | null
+          publisher_ipi: string | null
+          publisher_name: string | null
+          publishing_type: string
+          updated_at: string
+          user_id: string
+          writer_ipi: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_identifiers?: Json
+          id?: string
+          last_sync?: string | null
+          pro?: string | null
+          publisher_ipi?: string | null
+          publisher_name?: string | null
+          publishing_type?: string
+          updated_at?: string
+          user_id: string
+          writer_ipi?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_identifiers?: Json
+          id?: string
+          last_sync?: string | null
+          pro?: string | null
+          publisher_ipi?: string | null
+          publisher_name?: string | null
+          publishing_type?: string
+          updated_at?: string
+          user_id?: string
+          writer_ipi?: string | null
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
@@ -147,6 +189,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sessions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_registrations: {
+        Row: {
+          created_at: string
+          external_id: string | null
+          id: string
+          last_checked: string | null
+          notes: string | null
+          platform: string
+          registration_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          work_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          last_checked?: string | null
+          notes?: string | null
+          platform: string
+          registration_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          work_id: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          last_checked?: string | null
+          notes?: string | null
+          platform?: string
+          registration_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_registrations_work_id_fkey"
             columns: ["work_id"]
             isOneToOne: false
             referencedRelation: "works"
