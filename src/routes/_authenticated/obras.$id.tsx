@@ -218,6 +218,7 @@ function ObraDetail() {
           totalSplit={totalSplit}
         />
         <SessionsCard workId={id} sessions={sessions ?? []} />
+        <MieTimelineCard workId={id} />
       </div>
     </div>
   );
