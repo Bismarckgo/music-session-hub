@@ -24,6 +24,7 @@ import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authen
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedActividadRouteImport } from './routes/_authenticated/actividad'
 import { Route as AuthenticatedObrasIdRouteImport } from './routes/_authenticated/obras.$id'
+import { Route as ApiPublicDawIngestRouteImport } from './routes/api/public/daw.ingest'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -102,6 +103,11 @@ const AuthenticatedObrasIdRoute = AuthenticatedObrasIdRouteImport.update({
   path: '/obras/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicDawIngestRoute = ApiPublicDawIngestRouteImport.update({
+  id: '/api/public/daw/ingest',
+  path: '/api/public/daw/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
+  '/api/public/daw/ingest': typeof ApiPublicDawIngestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
+  '/api/public/daw/ingest': typeof ApiPublicDawIngestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
   '/_authenticated/splits': typeof AuthenticatedSplitsRoute
   '/_authenticated/obras/$id': typeof AuthenticatedObrasIdRoute
+  '/api/public/daw/ingest': typeof ApiPublicDawIngestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/sesiones'
     | '/splits'
     | '/obras/$id'
+    | '/api/public/daw/ingest'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/sesiones'
     | '/splits'
     | '/obras/$id'
+    | '/api/public/daw/ingest'
   id:
     | '__root__'
     | '/'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sesiones'
     | '/_authenticated/splits'
     | '/_authenticated/obras/$id'
+    | '/api/public/daw/ingest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicDawIngestRoute: typeof ApiPublicDawIngestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObrasIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/daw/ingest': {
+      id: '/api/public/daw/ingest'
+      path: '/api/public/daw/ingest'
+      fullPath: '/api/public/daw/ingest'
+      preLoaderRoute: typeof ApiPublicDawIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -358,17 +378,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicDawIngestRoute: ApiPublicDawIngestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

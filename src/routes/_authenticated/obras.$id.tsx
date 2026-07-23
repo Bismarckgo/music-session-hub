@@ -7,6 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { fetchDeezerCoverByISRC } from "@/lib/deezer.functions";
 
 import { supabase } from "@/integrations/supabase/client";
+import { emit } from "@/lib/mie/events";
+import { MieTimelineCard } from "@/components/MieTimelineCard";
 import {
   CHANNELS,
   CHANNEL_URL_PATTERNS,
@@ -104,9 +106,32 @@ function ObraDetail() {
     mutationFn: async (patch: Partial<Work>) => {
       const { error } = await supabase.from("works").update(patch).eq("id", id);
       if (error) throw error;
+      return patch;
     },
-    onSuccess: () => {
+    onSuccess: (patch) => {
       queryClient.invalidateQueries({ queryKey: ["works"] });
+      if (patch && ("isrc" in patch || "iswc" in patch)) {
+        void emit({
+          type: "IdentifiersSet",
+          work_id: id,
+          payload: { isrc: patch.isrc ?? work?.isrc ?? null, iswc: patch.iswc ?? work?.iswc ?? null },
+        });
+      }
+      if (patch && "cover_path" in patch && patch.cover_path) {
+        void emit({
+          type: "CoverAttached",
+          work_id: id,
+          payload: { cover_path: patch.cover_path },
+        });
+      }
+      if (patch && patch.distribution_status === "publicado") {
+        void emit({
+          type: "DistributionPublished",
+          work_id: id,
+          payload: { distributor: patch.distributor_name ?? work?.distributor_name ?? null },
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["mie_events", id] });
     },
     onError: () => toast.error("No se pudo actualizar la obra"),
   });
@@ -193,6 +218,7 @@ function ObraDetail() {
           totalSplit={totalSplit}
         />
         <SessionsCard workId={id} sessions={sessions ?? []} />
+        <MieTimelineCard workId={id} />
       </div>
     </div>
   );
@@ -648,11 +674,18 @@ function CollaboratorsCard({
         publisher: publisher || null,
       });
       if (error) throw error;
+      return { name, role, split: split ? Number(split) : 0 };
     },
-    onSuccess: () => {
+    onSuccess: (info) => {
       queryClient.invalidateQueries({ queryKey: ["collaborators", workId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["mie_events", workId] });
+      void emit({
+        type: "CollaboratorAdded",
+        work_id: workId,
+        payload: info as Record<string, unknown>,
+      });
       setOpen(false);
       reset();
       toast.success("Colaborador agregado");
@@ -844,19 +877,38 @@ function SessionsCard({ workId, sessions }: { workId: string; sessions: StudioSe
     mutationFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Sin sesión");
-      const { error } = await supabase.from("sessions").insert({
+      const { data, error } = await supabase.from("sessions").insert({
         work_id: workId,
         user_id: userData.user.id,
         daw,
         duration_minutes: duration ? Number(duration) : null,
         notes: notes || null,
-      });
+      }).select().single();
       if (error) throw error;
+      return data as StudioSession;
     },
-    onSuccess: () => {
+    onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ["sessions", workId] });
       queryClient.invalidateQueries({ queryKey: ["sessions", "all"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["mie_events", workId] });
+      const startedAt = session?.started_at;
+      const mins = session?.duration_minutes ?? null;
+      void emit({
+        type: "SessionStarted",
+        work_id: workId,
+        session_id: session?.id,
+        payload: { daw: session?.daw ?? null },
+        occurred_at: startedAt,
+      });
+      if (mins && mins > 0) {
+        void emit({
+          type: "SessionEnded",
+          work_id: workId,
+          session_id: session?.id,
+          payload: { duration_minutes: mins },
+        });
+      }
       setOpen(false);
       setDuration("");
       setNotes("");
