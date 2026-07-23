@@ -25,7 +25,7 @@ export async function emit(event: EmitInput): Promise<void> {
       session_id: event.session_id ?? null,
       type: event.type,
       actor: event.actor ?? "user",
-      payload: event.payload ?? {},
+      payload: (event.payload ?? {}) as never,
       occurred_at: event.occurred_at ?? new Date().toISOString(),
     });
     if (error) console.warn("[MIE] emit failed", event.type, error.message);
