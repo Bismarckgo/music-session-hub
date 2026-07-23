@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus, Hash, Search, ArrowUpDown, Upload, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { emit } from "@/lib/mie/events";
 import {
   STATUS_CLASSES,
   STATUS_LABELS,
@@ -139,6 +140,18 @@ function Catalogo() {
     onSuccess: (work) => {
       queryClient.invalidateQueries({ queryKey: ["works"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      void emit({
+        type: "WorkCreated",
+        work_id: work.id,
+        payload: { title: work.title, source: "catalogo" },
+      });
+      if (work.isrc || work.iswc) {
+        void emit({
+          type: "IdentifiersSet",
+          work_id: work.id,
+          payload: { isrc: work.isrc, iswc: work.iswc },
+        });
+      }
       toast.success(`Obra creada con CSTID ${work.fingerprint}`);
       setOpen(false);
       navigate({ to: "/obras/$id", params: { id: work.id } });
