@@ -674,11 +674,18 @@ function CollaboratorsCard({
         publisher: publisher || null,
       });
       if (error) throw error;
+      return { name, role, split: split ? Number(split) : 0 };
     },
-    onSuccess: () => {
+    onSuccess: (info) => {
       queryClient.invalidateQueries({ queryKey: ["collaborators", workId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["mie_events", workId] });
+      void emit({
+        type: "CollaboratorAdded",
+        work_id: workId,
+        payload: info as Record<string, unknown>,
+      });
       setOpen(false);
       reset();
       toast.success("Colaborador agregado");
