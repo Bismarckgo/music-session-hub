@@ -7,6 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { fetchDeezerCoverByISRC } from "@/lib/deezer.functions";
 
 import { supabase } from "@/integrations/supabase/client";
+import { emit } from "@/lib/mie/events";
+import { MieTimelineCard } from "@/components/MieTimelineCard";
 import {
   CHANNELS,
   CHANNEL_URL_PATTERNS,
@@ -104,9 +106,32 @@ function ObraDetail() {
     mutationFn: async (patch: Partial<Work>) => {
       const { error } = await supabase.from("works").update(patch).eq("id", id);
       if (error) throw error;
+      return patch;
     },
-    onSuccess: () => {
+    onSuccess: (patch) => {
       queryClient.invalidateQueries({ queryKey: ["works"] });
+      if (patch && ("isrc" in patch || "iswc" in patch)) {
+        void emit({
+          type: "IdentifiersSet",
+          work_id: id,
+          payload: { isrc: patch.isrc ?? work?.isrc ?? null, iswc: patch.iswc ?? work?.iswc ?? null },
+        });
+      }
+      if (patch && "cover_path" in patch && patch.cover_path) {
+        void emit({
+          type: "CoverAttached",
+          work_id: id,
+          payload: { cover_path: patch.cover_path },
+        });
+      }
+      if (patch && patch.distribution_status === "publicado") {
+        void emit({
+          type: "DistributionPublished",
+          work_id: id,
+          payload: { distributor: patch.distributor_name ?? work?.distributor_name ?? null },
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["mie_events", id] });
     },
     onError: () => toast.error("No se pudo actualizar la obra"),
   });
