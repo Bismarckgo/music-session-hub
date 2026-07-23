@@ -113,6 +113,57 @@ export type Database = {
         }
         Relationships: []
       }
+      mie_events: {
+        Row: {
+          actor: string
+          created_at: string
+          id: string
+          occurred_at: string
+          payload: Json
+          session_id: string | null
+          type: string
+          user_id: string
+          work_id: string | null
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          payload?: Json
+          session_id?: string | null
+          type: string
+          user_id: string
+          work_id?: string | null
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          payload?: Json
+          session_id?: string | null
+          type?: string
+          user_id?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mie_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mie_events_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       publishing_profiles: {
         Row: {
           created_at: string
