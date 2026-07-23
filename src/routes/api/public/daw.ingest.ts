@@ -71,7 +71,15 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
         if (findErr) return new Response(findErr.message, { status: 500 });
 
         let workId = existing?.id ?? null;
-        const events: Array<Record<string, unknown>> = [];
+        const events: Array<{
+          user_id: string;
+          work_id: string;
+          session_id?: string;
+          type: string;
+          actor: string;
+          payload: Record<string, unknown>;
+          occurred_at: string;
+        }> = [];
 
         if (!workId) {
           const { data: created, error: cErr } = await supabaseAdmin
@@ -129,7 +137,9 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
         }
 
         if (events.length) {
-          const { error: eErr } = await supabaseAdmin.from("mie_events").insert(events);
+          const { error: eErr } = await supabaseAdmin
+            .from("mie_events")
+            .insert(events as never);
           if (eErr) return new Response(eErr.message, { status: 500 });
         }
 
