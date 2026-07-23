@@ -877,19 +877,38 @@ function SessionsCard({ workId, sessions }: { workId: string; sessions: StudioSe
     mutationFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Sin sesión");
-      const { error } = await supabase.from("sessions").insert({
+      const { data, error } = await supabase.from("sessions").insert({
         work_id: workId,
         user_id: userData.user.id,
         daw,
         duration_minutes: duration ? Number(duration) : null,
         notes: notes || null,
-      });
+      }).select().single();
       if (error) throw error;
+      return data as StudioSession;
     },
-    onSuccess: () => {
+    onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ["sessions", workId] });
       queryClient.invalidateQueries({ queryKey: ["sessions", "all"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["mie_events", workId] });
+      const startedAt = session?.started_at;
+      const mins = session?.duration_minutes ?? null;
+      void emit({
+        type: "SessionStarted",
+        work_id: workId,
+        session_id: session?.id,
+        payload: { daw: session?.daw ?? null },
+        occurred_at: startedAt,
+      });
+      if (mins && mins > 0) {
+        void emit({
+          type: "SessionEnded",
+          work_id: workId,
+          session_id: session?.id,
+          payload: { duration_minutes: mins },
+        });
+      }
       setOpen(false);
       setDuration("");
       setNotes("");
