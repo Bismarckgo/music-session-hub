@@ -86,7 +86,6 @@ function AutomatizacionesPage() {
   }, [data]);
 
   const apply = async (a: Automation) => {
-    const collaborators = data?.collaborators ?? [];
     if (a.plan.type === "update_collaborator") {
       const { error } = await supabase
         .from("collaborators")
@@ -121,7 +120,6 @@ function AutomatizacionesPage() {
         .eq("id", a.workId);
       if (error) throw error;
     }
-    void collaborators;
     await emit({
       type: a.event.type as never,
       work_id: a.workId,
