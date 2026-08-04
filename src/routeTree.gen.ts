@@ -19,6 +19,7 @@ import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPublishingRouteImport } from './routes/_authenticated/publishing'
 import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConocimientoRouteImport } from './routes/_authenticated/conocimiento'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
@@ -77,6 +78,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConocimientoRoute =
+  AuthenticatedConocimientoRouteImport.update({
+    id: '/conocimiento',
+    path: '/conocimiento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedConfiguracionRoute =
   AuthenticatedConfiguracionRouteImport.update({
     id: '/configuracion',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/conocimiento': typeof AuthenticatedConocimientoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
@@ -142,6 +150,7 @@ export interface FileRoutesByTo {
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/conocimiento': typeof AuthenticatedConocimientoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
@@ -162,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/_authenticated/conocimiento': typeof AuthenticatedConocimientoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
   '/_authenticated/publishing': typeof AuthenticatedPublishingRoute
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/colaboradores'
     | '/configuracion'
+    | '/conocimiento'
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/colaboradores'
     | '/configuracion'
+    | '/conocimiento'
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
@@ -219,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/catalogo'
     | '/_authenticated/colaboradores'
     | '/_authenticated/configuracion'
+    | '/_authenticated/conocimiento'
     | '/_authenticated/dashboard'
     | '/_authenticated/distribucion'
     | '/_authenticated/publishing'
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/conocimiento': {
+      id: '/_authenticated/conocimiento'
+      path: '/conocimiento'
+      fullPath: '/conocimiento'
+      preLoaderRoute: typeof AuthenticatedConocimientoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracion': {
       id: '/_authenticated/configuracion'
       path: '/configuracion'
@@ -367,6 +387,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
+  AuthenticatedConocimientoRoute: typeof AuthenticatedConocimientoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
   AuthenticatedPublishingRoute: typeof AuthenticatedPublishingRoute
@@ -382,6 +403,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
+  AuthenticatedConocimientoRoute: AuthenticatedConocimientoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
   AuthenticatedPublishingRoute: AuthenticatedPublishingRoute,
@@ -404,13 +426,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -13,6 +13,7 @@ import {
   Radio,
   BookOpen,
   Sparkles,
+  Network,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ const items = [
   { title: "Publishing", url: "/publishing", icon: BookOpen },
   { title: "Registros", url: "/registros", icon: ClipboardList },
   { title: "Asistente", url: "/asistente", icon: Sparkles },
+  { title: "Conocimiento", url: "/conocimiento", icon: Network },
   { title: "Actividad", url: "/actividad", icon: Activity },
 ];
 

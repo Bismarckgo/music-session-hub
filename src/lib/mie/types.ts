@@ -9,6 +9,7 @@ export type MieEventType =
   | "CoverAttached"
   | "IdentifiersSet"
   | "SplitsBalanced"
+  | "IdentityLinked"
   | "RegistrationSubmitted"
   | "DistributionPublished";
 

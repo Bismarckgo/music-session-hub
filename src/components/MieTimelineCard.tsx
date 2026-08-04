@@ -15,6 +15,7 @@ const EVENT_LABELS: Record<string, string> = {
   CollaboratorAdded: "Colaborador agregado",
   CoverAttached: "Carátula adjuntada",
   IdentifiersSet: "Identificadores actualizados",
+  IdentityLinked: "Identidad unificada",
   RegistrationSubmitted: "Registro enviado",
   DistributionPublished: "Distribución publicada",
 };
