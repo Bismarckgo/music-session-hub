@@ -23,6 +23,7 @@ import { Route as AuthenticatedConocimientoRouteImport } from './routes/_authent
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
+import { Route as AuthenticatedAutomatizacionesRouteImport } from './routes/_authenticated/automatizaciones'
 import { Route as AuthenticatedAsistenteRouteImport } from './routes/_authenticated/asistente'
 import { Route as AuthenticatedActividadRouteImport } from './routes/_authenticated/actividad'
 import { Route as AuthenticatedObrasIdRouteImport } from './routes/_authenticated/obras.$id'
@@ -101,6 +102,12 @@ const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAutomatizacionesRoute =
+  AuthenticatedAutomatizacionesRouteImport.update({
+    id: '/automatizaciones',
+    path: '/automatizaciones',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAsistenteRoute = AuthenticatedAsistenteRouteImport.update({
   id: '/asistente',
   path: '/asistente',
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/actividad': typeof AuthenticatedActividadRoute
   '/asistente': typeof AuthenticatedAsistenteRoute
+  '/automatizaciones': typeof AuthenticatedAutomatizacionesRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/actividad': typeof AuthenticatedActividadRoute
   '/asistente': typeof AuthenticatedAsistenteRoute
+  '/automatizaciones': typeof AuthenticatedAutomatizacionesRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/actividad': typeof AuthenticatedActividadRoute
   '/_authenticated/asistente': typeof AuthenticatedAsistenteRoute
+  '/_authenticated/automatizaciones': typeof AuthenticatedAutomatizacionesRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/actividad'
     | '/asistente'
+    | '/automatizaciones'
     | '/catalogo'
     | '/colaboradores'
     | '/configuracion'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/actividad'
     | '/asistente'
+    | '/automatizaciones'
     | '/catalogo'
     | '/colaboradores'
     | '/configuracion'
@@ -228,6 +240,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/actividad'
     | '/_authenticated/asistente'
+    | '/_authenticated/automatizaciones'
     | '/_authenticated/catalogo'
     | '/_authenticated/colaboradores'
     | '/_authenticated/configuracion'
@@ -350,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCatalogoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/automatizaciones': {
+      id: '/_authenticated/automatizaciones'
+      path: '/automatizaciones'
+      fullPath: '/automatizaciones'
+      preLoaderRoute: typeof AuthenticatedAutomatizacionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/asistente': {
       id: '/_authenticated/asistente'
       path: '/asistente'
@@ -384,6 +404,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActividadRoute: typeof AuthenticatedActividadRoute
   AuthenticatedAsistenteRoute: typeof AuthenticatedAsistenteRoute
+  AuthenticatedAutomatizacionesRoute: typeof AuthenticatedAutomatizacionesRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
@@ -400,6 +421,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActividadRoute: AuthenticatedActividadRoute,
   AuthenticatedAsistenteRoute: AuthenticatedAsistenteRoute,
+  AuthenticatedAutomatizacionesRoute: AuthenticatedAutomatizacionesRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
