@@ -14,6 +14,7 @@ import {
   BookOpen,
   Sparkles,
   Network,
+  Zap,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ const items = [
   { title: "Publishing", url: "/publishing", icon: BookOpen },
   { title: "Registros", url: "/registros", icon: ClipboardList },
   { title: "Asistente", url: "/asistente", icon: Sparkles },
+  { title: "Automatizaciones", url: "/automatizaciones", icon: Zap },
   { title: "Conocimiento", url: "/conocimiento", icon: Network },
   { title: "Actividad", url: "/actividad", icon: Activity },
 ];
