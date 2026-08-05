@@ -10,8 +10,11 @@ import { WORK_STATE_LABELS, type MieEvent } from "@/lib/mie/types";
 
 const EVENT_LABELS: Record<string, string> = {
   WorkCreated: "Obra creada",
+  ProjectDetected: "Proyecto detectado en el DAW",
   SessionStarted: "Sesión iniciada",
+  SessionSaved: "Proyecto guardado en el DAW",
   SessionEnded: "Sesión finalizada",
+  BounceExported: "Bounce exportado",
   CollaboratorAdded: "Colaborador agregado",
   CoverAttached: "Carátula adjuntada",
   IdentifiersSet: "Identificadores actualizados",
