@@ -3,8 +3,11 @@
 
 export type MieEventType =
   | "WorkCreated"
+  | "ProjectDetected"
   | "SessionStarted"
+  | "SessionSaved"
   | "SessionEnded"
+  | "BounceExported"
   | "CollaboratorAdded"
   | "CoverAttached"
   | "IdentifiersSet"
