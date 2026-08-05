@@ -23,6 +23,10 @@ function nextStateFor(e: MieEvent, current: WorkState): WorkState {
       return "draft";
     case "SessionStarted":
       return "in_session";
+    case "SessionSaved":
+      return "in_session";
+    case "BounceExported":
+      return rankAtLeast(current, "tracked") ? "mixed" : "tracked";
     case "SessionEnded": {
       const mins = Number((e.payload as { duration_minutes?: number })?.duration_minutes ?? 0);
       return mins > 0 ? "tracked" : current;
@@ -42,4 +46,8 @@ function nextStateFor(e: MieEvent, current: WorkState): WorkState {
 
 function rank(s: WorkState): number {
   return WORK_STATE_ORDER.indexOf(s);
+}
+
+function rankAtLeast(current: WorkState, min: WorkState): boolean {
+  return rank(current) >= rank(min);
 }

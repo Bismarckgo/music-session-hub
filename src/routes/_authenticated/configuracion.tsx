@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Settings, BookOpen } from "lucide-react";
+import { Settings, BookOpen, HardDriveDownload, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -38,10 +38,14 @@ const sb = supabase as unknown as {
 
 function ConfiguracionPage() {
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const qc = useQueryClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? "");
+      setUserId(data.user?.id ?? "");
+    });
   }, []);
 
   const { data: profile } = useQuery({
@@ -190,6 +194,51 @@ function ConfiguracionPage() {
           <p>
             El título, colaboradores, splits y metadata pueden cambiar. El CSTID nunca cambia.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-2">
+          <HardDriveDownload className="h-4 w-4 text-primary" />
+          <CardTitle className="text-base">DAW Watcher (app de escritorio)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p className="text-muted-foreground">
+            La app de escritorio observa tus carpetas de proyectos (Ableton, Logic, FL Studio, Pro
+            Tools, Cubase, Reaper, Studio One, Bitwig) y registra automáticamente cuándo se detecta
+            un proyecto, se guarda una sesión o se exporta un bounce. Si no hay internet, los
+            eventos se guardan en disco y se sincronizan al reconectar.
+          </p>
+          <div className="grid gap-2">
+            <Label>Tu ID de usuario (para el watcher)</Label>
+            <div className="flex gap-2">
+              <Input readOnly value={userId} className="font-mono text-xs" />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard.writeText(userId);
+                  toast.success("ID copiado");
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2 rounded-md bg-secondary p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">Cómo activarlo</p>
+            <p>
+              1. Abre la app de escritorio una vez. Se crea el archivo{" "}
+              <code className="font-mono">cst-watcher.json</code> en la carpeta de datos de CST.
+            </p>
+            <p>
+              2. Pega ahí tu <code className="font-mono">userId</code> y el secreto de ingesta, y
+              ajusta la lista <code className="font-mono">folders</code> con tus carpetas de
+              proyectos.
+            </p>
+            <p>3. Reinicia la app: los eventos aparecerán en Actividad y en el timeline de cada obra.</p>
+          </div>
         </CardContent>
       </Card>
     </div>
