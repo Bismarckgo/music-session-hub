@@ -45,8 +45,12 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
         }
 
         let payload: {
+          event?: string;
           daw?: string;
           project_name?: string;
+          project_path?: string;
+          bounce_count?: number;
+          client_event_id?: string;
           started_at?: string;
           duration_minutes?: number;
           collaborators?: { name?: string; role?: string }[];
@@ -59,7 +63,23 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
         const projectName = payload.project_name?.trim();
         if (!projectName) return new Response("project_name required", { status: 400 });
 
+        const kind = (payload.event ?? "session_started").toLowerCase();
+        if (!["session_started", "project_detected", "session_saved", "bounce_exported"].includes(kind)) {
+          return new Response("unknown event", { status: 400 });
+        }
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        // Idempotencia: el watcher puede reintentar el mismo evento tras un fallo de red.
+        if (payload.client_event_id) {
+          const { data: dupe } = await supabaseAdmin
+            .from("mie_events")
+            .select("id")
+            .eq("user_id", userId)
+            .filter("payload->>client_event_id", "eq", payload.client_event_id)
+            .maybeSingle();
+          if (dupe) return Response.json({ ok: true, duplicate: true });
+        }
 
         // Find or create work by (user_id, title)
         const { data: existing, error: findErr } = await supabaseAdmin
@@ -81,6 +101,12 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
           occurred_at: string;
         }> = [];
 
+        const meta = {
+          source: "daw-ingest",
+          ...(payload.project_path ? { project_path: payload.project_path } : {}),
+          ...(payload.client_event_id ? { client_event_id: payload.client_event_id } : {}),
+        };
+
         if (!workId) {
           const { data: created, error: cErr } = await supabaseAdmin
             .from("works")
@@ -94,12 +120,40 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
             work_id: workId,
             type: "WorkCreated",
             actor: "daw",
-            payload: { title: projectName, source: "daw-ingest" },
+            payload: { title: projectName, ...meta },
             occurred_at: payload.started_at ?? new Date().toISOString(),
           });
         }
 
         const startedAt = payload.started_at ?? new Date().toISOString();
+
+        // Fase 4 — eventos del DAW Watcher: no crean sesión nueva, solo enriquecen el log.
+        if (kind === "project_detected" || kind === "session_saved" || kind === "bounce_exported") {
+          const type =
+            kind === "project_detected"
+              ? "ProjectDetected"
+              : kind === "session_saved"
+                ? "SessionSaved"
+                : "BounceExported";
+          const { error: wErr } = await supabaseAdmin.from("mie_events").insert([
+            ...events,
+            {
+              user_id: userId,
+              work_id: workId!,
+              type,
+              actor: "daw-watcher",
+              payload: {
+                daw: payload.daw ?? null,
+                ...(payload.bounce_count != null ? { bounce_count: payload.bounce_count } : {}),
+                ...meta,
+              },
+              occurred_at: startedAt,
+            },
+          ] as never);
+          if (wErr) return new Response(wErr.message, { status: 500 });
+          return Response.json({ ok: true, work_id: workId, event: type });
+        }
+
         const { data: session, error: sErr } = await supabaseAdmin
           .from("sessions")
           .insert({
@@ -119,7 +173,7 @@ export const Route = createFileRoute("/api/public/daw/ingest")({
           session_id: session.id,
           type: "SessionStarted",
           actor: "daw",
-          payload: { daw: payload.daw ?? null },
+          payload: { daw: payload.daw ?? null, ...meta },
           occurred_at: startedAt,
         });
 
