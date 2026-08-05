@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Settings, BookOpen } from "lucide-react";
+import { Settings, BookOpen, HardDriveDownload, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -38,10 +38,14 @@ const sb = supabase as unknown as {
 
 function ConfiguracionPage() {
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const qc = useQueryClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? "");
+      setUserId(data.user?.id ?? "");
+    });
   }, []);
 
   const { data: profile } = useQuery({
