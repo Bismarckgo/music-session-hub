@@ -9,6 +9,7 @@ import { fetchDeezerCoverByISRC } from "@/lib/deezer.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { emit } from "@/lib/mie/events";
 import { MieTimelineCard } from "@/components/MieTimelineCard";
+import { EnrichCard } from "@/components/EnrichCard";
 import {
   CHANNELS,
   CHANNEL_URL_PATTERNS,
@@ -218,6 +219,7 @@ function ObraDetail() {
           totalSplit={totalSplit}
         />
         <SessionsCard workId={id} sessions={sessions ?? []} />
+        <EnrichCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
         <MieTimelineCard workId={id} />
       </div>
     </div>
