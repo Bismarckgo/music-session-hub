@@ -1,25 +1,35 @@
 import { createServerFn } from "@tanstack/react-start";
+import { mbWorkSearch } from "./adapters/public-sources";
 
 /**
- * Public MLC search stub. The MLC exposes a public work-search endpoint on
- * their portal (portal.themlc.com) but not a stable public JSON API for
- * third parties. This adapter is intentionally simple: it returns whatever
- * matches we can heuristically fetch and gracefully degrades to no results.
- * When an official API becomes available, only this file changes.
+ * Búsqueda de composiciones para conciliar con The MLC.
+ * The MLC no publica una API JSON estable para terceros, así que la
+ * resolución se hace contra MusicBrainz (base pública de obras con ISWC)
+ * y se devuelve además el enlace directo al portal público de The MLC.
+ * Cuando exista API oficial, solo cambia este archivo.
  */
 export const searchMLC = createServerFn({ method: "POST" })
   .inputValidator((input: { iswc?: string | null; title?: string | null }) => input)
   .handler(async ({ data }) => {
-    const iswc = (data.iswc ?? "").replace(/[^A-Z0-9]/gi, "");
+    const iswc = (data.iswc ?? "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
     const title = (data.title ?? "").trim();
-    if (!iswc && !title) return { results: [] as Array<Record<string, string>> };
+    if (!iswc && !title) return { results: [], portalUrl: null, note: null };
 
-    // Placeholder implementation — returns an empty list. Kept as a real
-    // async fn so the UI wires up cleanly and future implementations can
-    // add a fetch() call here without any UI changes.
+    const works = await mbWorkSearch(iswc ? { iswc } : { title });
+    const portalUrl = `https://portal.themlc.com/search?searchTerm=${encodeURIComponent(iswc || title)}`;
+
     return {
-      results: [] as Array<{ title: string; iswc?: string; writers?: string; source: string }>,
+      results: works.map((w) => ({
+        title: w.title,
+        iswc: w.iswc ?? undefined,
+        writers: w.writers.join(", ") || undefined,
+        url: w.url,
+        source: "MusicBrainz",
+      })),
+      portalUrl,
       queried: { iswc, title },
-      note: "Búsqueda en The MLC pendiente de API oficial. La arquitectura está lista para conectar.",
+      note: works.length
+        ? "Coincidencias en la base pública de obras. Verifica en el portal de The MLC."
+        : "Sin coincidencias públicas. Abre el portal de The MLC para confirmar manualmente.",
     };
   });
