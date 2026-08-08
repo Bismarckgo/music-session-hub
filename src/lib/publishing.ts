@@ -1,4 +1,5 @@
 import type { Work, Collaborator } from "./catalog";
+import { buildERN } from "./ddex";
 
 export const PUBLISHING_PLATFORMS = [
   "ASCAP",
@@ -336,7 +337,22 @@ export const ExportCWR: Exporter = {
   },
 };
 
-export const EXPORTERS: Exporter[] = [ExportCSV, ExportJSON, ExportCWR];
+export const ExportDDEX: Exporter = {
+  id: "ddex",
+  label: "DDEX ERN 4.3",
+  extension: "xml",
+  mime: "application/xml;charset=utf-8",
+  build({ work, collaborators, profile }) {
+    return buildERN({
+      work,
+      collaborators,
+      labelName: profile?.publisher_name ?? null,
+      labelId: profile?.publisher_ipi ?? null,
+    });
+  },
+};
+
+export const EXPORTERS: Exporter[] = [ExportCSV, ExportJSON, ExportCWR, ExportDDEX];
 
 export function downloadExport(ctx: ExportContext, exporter: Exporter) {
   const content = exporter.build(ctx);

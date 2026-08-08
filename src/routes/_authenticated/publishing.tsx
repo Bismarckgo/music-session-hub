@@ -104,7 +104,11 @@ function PublishingPage() {
 
   const [selected, setSelected] = useState<WorkWithCollabs | null>(null);
   const [mlcOpen, setMlcOpen] = useState(false);
-  const [mlcResults, setMlcResults] = useState<{ note?: string; results: unknown[] } | null>(null);
+  const [mlcResults, setMlcResults] = useState<{
+    note?: string | null;
+    portalUrl?: string | null;
+    results: Array<{ title?: string; iswc?: string; writers?: string; url?: string; source?: string }>;
+  } | null>(null);
 
   const statusMut = useMutation({
     mutationFn: async (v: { work_id: string; platform: PublishingPlatform; status: RegistrationStatus }) => {
@@ -270,7 +274,7 @@ function PublishingPage() {
               profile={profile}
               onMLC={async () => {
                 const res = await mlcFn({ data: { iswc: selected.iswc, title: selected.title } });
-                setMlcResults(res as { note?: string; results: unknown[] });
+                setMlcResults(res);
                 setMlcOpen(true);
               }}
             />
@@ -283,20 +287,43 @@ function PublishingPage() {
           <DialogHeader>
             <DialogTitle>Búsqueda en The MLC</DialogTitle>
           </DialogHeader>
-          <div className="text-sm">
+          <div className="space-y-3 text-sm">
             {mlcResults?.results?.length ? (
               <ul className="space-y-2">
-                {(mlcResults.results as Array<Record<string, string>>).map((r, i) => (
-                  <li key={i} className="rounded border p-2 text-xs">
-                    <pre className="whitespace-pre-wrap">{JSON.stringify(r, null, 2)}</pre>
+                {mlcResults.results.map((r, i) => (
+                  <li key={i} className="rounded border p-3">
+                    <p className="font-medium">{r.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {r.iswc ? `ISWC ${r.iswc}` : "Sin ISWC"}
+                      {r.writers ? ` · ${r.writers}` : ""}
+                    </p>
+                    {r.url ? (
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary underline"
+                      >
+                        Ver ficha pública
+                      </a>
+                    ) : null}
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-muted-foreground">
-                Sin resultados. {mlcResults?.note}
-              </p>
-            )}
+            ) : null}
+            {mlcResults?.note ? (
+              <p className="text-muted-foreground">{mlcResults.note}</p>
+            ) : null}
+            {mlcResults?.portalUrl ? (
+              <a
+                href={mlcResults.portalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
+                Abrir portal de The MLC
+              </a>
+            ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setMlcOpen(false)}>Cerrar</Button>
