@@ -206,6 +206,233 @@ export type Database = {
         }
         Relationships: []
       }
+      release_tracks: {
+        Row: {
+          created_at: string
+          id: string
+          isrc: string | null
+          release_id: string
+          track_no: number
+          updated_at: string
+          user_id: string
+          version_id: string | null
+          work_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          isrc?: string | null
+          release_id: string
+          track_no?: number
+          updated_at?: string
+          user_id: string
+          version_id?: string | null
+          work_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          isrc?: string | null
+          release_id?: string
+          track_no?: number
+          updated_at?: string
+          user_id?: string
+          version_id?: string | null
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_tracks_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_tracks_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "work_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_tracks_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      releases: {
+        Row: {
+          cover_path: string | null
+          created_at: string
+          distributor: string | null
+          id: string
+          label_name: string | null
+          notes: string | null
+          release_date: string | null
+          release_type: string
+          status: string
+          title: string
+          upc: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_path?: string | null
+          created_at?: string
+          distributor?: string | null
+          id?: string
+          label_name?: string | null
+          notes?: string | null
+          release_date?: string | null
+          release_type?: string
+          status?: string
+          title: string
+          upc?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_path?: string | null
+          created_at?: string
+          distributor?: string | null
+          id?: string
+          label_name?: string | null
+          notes?: string | null
+          release_date?: string | null
+          release_type?: string
+          status?: string
+          title?: string
+          upc?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      royalty_lines: {
+        Row: {
+          amount: number
+          artist: string | null
+          created_at: string
+          currency: string
+          id: string
+          isrc: string | null
+          match_method: string
+          platform: string | null
+          report_id: string
+          territory: string | null
+          title: string | null
+          units: number
+          user_id: string
+          version_id: string | null
+          work_id: string | null
+        }
+        Insert: {
+          amount?: number
+          artist?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          isrc?: string | null
+          match_method?: string
+          platform?: string | null
+          report_id: string
+          territory?: string | null
+          title?: string | null
+          units?: number
+          user_id: string
+          version_id?: string | null
+          work_id?: string | null
+        }
+        Update: {
+          amount?: number
+          artist?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          isrc?: string | null
+          match_method?: string
+          platform?: string | null
+          report_id?: string
+          territory?: string | null
+          title?: string | null
+          units?: number
+          user_id?: string
+          version_id?: string | null
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royalty_lines_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "royalty_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "royalty_lines_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "work_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "royalty_lines_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      royalty_reports: {
+        Row: {
+          created_at: string
+          currency: string
+          file_name: string | null
+          id: string
+          line_count: number
+          matched_count: number
+          period_end: string | null
+          period_start: string | null
+          source: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          file_name?: string | null
+          id?: string
+          line_count?: number
+          matched_count?: number
+          period_end?: string | null
+          period_start?: string | null
+          source: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          file_name?: string | null
+          id?: string
+          line_count?: number
+          matched_count?: number
+          period_end?: string | null
+          period_start?: string | null
+          source?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
@@ -290,6 +517,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "work_registrations_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_versions: {
+        Row: {
+          created_at: string
+          duration_sec: number | null
+          id: string
+          isrc: string | null
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          version_type: string
+          work_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          isrc?: string | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          version_type?: string
+          work_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          isrc?: string | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          version_type?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_versions_work_id_fkey"
             columns: ["work_id"]
             isOneToOne: false
             referencedRelation: "works"
