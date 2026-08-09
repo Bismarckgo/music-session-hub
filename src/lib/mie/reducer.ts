@@ -37,6 +37,8 @@ function nextStateFor(e: MieEvent, current: WorkState): WorkState {
     }
     case "RegistrationSubmitted":
       return "registered";
+    case "ReleasePublished":
+      return "distributed";
     case "DistributionPublished":
       return "distributed";
     default:
