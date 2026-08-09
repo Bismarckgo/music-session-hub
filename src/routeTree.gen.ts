@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSplitsRouteImport } from './routes/_authenticated/splits'
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
+import { Route as AuthenticatedReleasesRouteImport } from './routes/_authenticated/releases'
 import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authenticated/registros'
 import { Route as AuthenticatedPublishingRouteImport } from './routes/_authenticated/publishing'
 import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
@@ -56,6 +57,11 @@ const AuthenticatedSplitsRoute = AuthenticatedSplitsRouteImport.update({
 const AuthenticatedSesionesRoute = AuthenticatedSesionesRouteImport.update({
   id: '/sesiones',
   path: '/sesiones',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReleasesRoute = AuthenticatedReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRegistrosRoute = AuthenticatedRegistrosRouteImport.update({
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
   '/registros': typeof AuthenticatedRegistrosRoute
+  '/releases': typeof AuthenticatedReleasesRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
   '/registros': typeof AuthenticatedRegistrosRoute
+  '/releases': typeof AuthenticatedReleasesRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
   '/splits': typeof AuthenticatedSplitsRoute
   '/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
   '/_authenticated/publishing': typeof AuthenticatedPublishingRoute
   '/_authenticated/registros': typeof AuthenticatedRegistrosRoute
+  '/_authenticated/releases': typeof AuthenticatedReleasesRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
   '/_authenticated/splits': typeof AuthenticatedSplitsRoute
   '/_authenticated/obras/$id': typeof AuthenticatedObrasIdRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/distribucion'
     | '/publishing'
     | '/registros'
+    | '/releases'
     | '/sesiones'
     | '/splits'
     | '/obras/$id'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/distribucion'
     | '/publishing'
     | '/registros'
+    | '/releases'
     | '/sesiones'
     | '/splits'
     | '/obras/$id'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/distribucion'
     | '/_authenticated/publishing'
     | '/_authenticated/registros'
+    | '/_authenticated/releases'
     | '/_authenticated/sesiones'
     | '/_authenticated/splits'
     | '/_authenticated/obras/$id'
@@ -305,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/sesiones'
       fullPath: '/sesiones'
       preLoaderRoute: typeof AuthenticatedSesionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/releases': {
+      id: '/_authenticated/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof AuthenticatedReleasesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/registros': {
@@ -413,6 +432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
   AuthenticatedPublishingRoute: typeof AuthenticatedPublishingRoute
   AuthenticatedRegistrosRoute: typeof AuthenticatedRegistrosRoute
+  AuthenticatedReleasesRoute: typeof AuthenticatedReleasesRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
   AuthenticatedSplitsRoute: typeof AuthenticatedSplitsRoute
   AuthenticatedObrasIdRoute: typeof AuthenticatedObrasIdRoute
@@ -430,6 +450,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
   AuthenticatedPublishingRoute: AuthenticatedPublishingRoute,
   AuthenticatedRegistrosRoute: AuthenticatedRegistrosRoute,
+  AuthenticatedReleasesRoute: AuthenticatedReleasesRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
   AuthenticatedSplitsRoute: AuthenticatedSplitsRoute,
   AuthenticatedObrasIdRoute: AuthenticatedObrasIdRoute,
@@ -448,13 +469,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
