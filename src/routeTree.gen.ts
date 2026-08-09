@@ -17,6 +17,7 @@ import { Route as AuthenticatedSplitsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSesionesRouteImport } from './routes/_authenticated/sesiones'
 import { Route as AuthenticatedReleasesRouteImport } from './routes/_authenticated/releases'
 import { Route as AuthenticatedRegistrosRouteImport } from './routes/_authenticated/registros'
+import { Route as AuthenticatedRegaliasRouteImport } from './routes/_authenticated/regalias'
 import { Route as AuthenticatedPublishingRouteImport } from './routes/_authenticated/publishing'
 import { Route as AuthenticatedDistribucionRouteImport } from './routes/_authenticated/distribucion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -67,6 +68,11 @@ const AuthenticatedReleasesRoute = AuthenticatedReleasesRouteImport.update({
 const AuthenticatedRegistrosRoute = AuthenticatedRegistrosRouteImport.update({
   id: '/registros',
   path: '/registros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRegaliasRoute = AuthenticatedRegaliasRouteImport.update({
+  id: '/regalias',
+  path: '/regalias',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPublishingRoute = AuthenticatedPublishingRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
+  '/regalias': typeof AuthenticatedRegaliasRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/releases': typeof AuthenticatedReleasesRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/distribucion': typeof AuthenticatedDistribucionRoute
   '/publishing': typeof AuthenticatedPublishingRoute
+  '/regalias': typeof AuthenticatedRegaliasRoute
   '/registros': typeof AuthenticatedRegistrosRoute
   '/releases': typeof AuthenticatedReleasesRoute
   '/sesiones': typeof AuthenticatedSesionesRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/distribucion': typeof AuthenticatedDistribucionRoute
   '/_authenticated/publishing': typeof AuthenticatedPublishingRoute
+  '/_authenticated/regalias': typeof AuthenticatedRegaliasRoute
   '/_authenticated/registros': typeof AuthenticatedRegistrosRoute
   '/_authenticated/releases': typeof AuthenticatedReleasesRoute
   '/_authenticated/sesiones': typeof AuthenticatedSesionesRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
+    | '/regalias'
     | '/registros'
     | '/releases'
     | '/sesiones'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/distribucion'
     | '/publishing'
+    | '/regalias'
     | '/registros'
     | '/releases'
     | '/sesiones'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/distribucion'
     | '/_authenticated/publishing'
+    | '/_authenticated/regalias'
     | '/_authenticated/registros'
     | '/_authenticated/releases'
     | '/_authenticated/sesiones'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       path: '/registros'
       fullPath: '/registros'
       preLoaderRoute: typeof AuthenticatedRegistrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/regalias': {
+      id: '/_authenticated/regalias'
+      path: '/regalias'
+      fullPath: '/regalias'
+      preLoaderRoute: typeof AuthenticatedRegaliasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/publishing': {
@@ -431,6 +450,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDistribucionRoute: typeof AuthenticatedDistribucionRoute
   AuthenticatedPublishingRoute: typeof AuthenticatedPublishingRoute
+  AuthenticatedRegaliasRoute: typeof AuthenticatedRegaliasRoute
   AuthenticatedRegistrosRoute: typeof AuthenticatedRegistrosRoute
   AuthenticatedReleasesRoute: typeof AuthenticatedReleasesRoute
   AuthenticatedSesionesRoute: typeof AuthenticatedSesionesRoute
@@ -449,6 +469,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDistribucionRoute: AuthenticatedDistribucionRoute,
   AuthenticatedPublishingRoute: AuthenticatedPublishingRoute,
+  AuthenticatedRegaliasRoute: AuthenticatedRegaliasRoute,
   AuthenticatedRegistrosRoute: AuthenticatedRegistrosRoute,
   AuthenticatedReleasesRoute: AuthenticatedReleasesRoute,
   AuthenticatedSesionesRoute: AuthenticatedSesionesRoute,
