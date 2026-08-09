@@ -13,6 +13,11 @@ export type MieEventType =
   | "IdentifiersSet"
   | "SplitsBalanced"
   | "IdentityLinked"
+  | "VersionCreated"
+  | "ReleaseTrackAdded"
+  | "ReleasePublished"
+  | "RoyaltyImported"
+  | "RoyaltyMatched"
   | "RegistrationSubmitted"
   | "DistributionPublished";
 
