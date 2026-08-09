@@ -15,6 +15,8 @@ import {
   Sparkles,
   Network,
   Zap,
+  Album,
+  Coins,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +39,8 @@ const items = [
   { title: "Catálogo", url: "/catalogo", icon: Library },
   { title: "Colaboradores", url: "/colaboradores", icon: Users },
   { title: "Splits", url: "/splits", icon: Percent },
+  { title: "Releases", url: "/releases", icon: Album },
+  { title: "Regalías", url: "/regalias", icon: Coins },
   { title: "Distribución", url: "/distribucion", icon: Radio },
   { title: "Publishing", url: "/publishing", icon: BookOpen },
   { title: "Registros", url: "/registros", icon: ClipboardList },
