@@ -19,6 +19,11 @@ const EVENT_LABELS: Record<string, string> = {
   CoverAttached: "Carátula adjuntada",
   IdentifiersSet: "Identificadores actualizados",
   IdentityLinked: "Identidad unificada",
+  VersionCreated: "Versión creada",
+  ReleaseTrackAdded: "Añadida a un release",
+  ReleasePublished: "Release publicado",
+  RoyaltyImported: "Regalías importadas",
+  RoyaltyMatched: "Línea de regalías conciliada",
   RegistrationSubmitted: "Registro enviado",
   DistributionPublished: "Distribución publicada",
 };
