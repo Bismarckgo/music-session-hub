@@ -255,7 +255,7 @@ function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Obras recientes
             </CardTitle>
-            <Link to="/catalogo" className="text-xs text-primary hover:underline">
+            <Link to="/catalogo" search={{ nueva: false }} className="text-xs text-primary hover:underline">
               Ver catálogo
             </Link>
           </CardHeader>
