@@ -152,7 +152,7 @@ function ObraDetail() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
-      <Link to="/catalogo" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link to="/catalogo" search={{ nueva: false }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver al catálogo
       </Link>
 

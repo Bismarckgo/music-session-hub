@@ -1,11 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Sparkles, AlertTriangle, CircleAlert, Info } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Sparkles, AlertTriangle, CircleAlert, Info, Check, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Collaborator, Work } from "@/lib/catalog";
 import type { MieEvent } from "@/lib/mie/types";
 import { suggestForWork, stateLabel, type Suggestion } from "@/lib/mie/assistant";
+import {
+  rankSuggestions,
+  type MieFeedback,
+  type MieMemory,
+} from "@/lib/mie/memory";
+import { MieMemoryCard } from "@/components/MieMemoryCard";
+import { SessionNotesCard } from "@/components/SessionNotesCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +55,8 @@ const LEVEL_CLASS: Record<Suggestion["level"], string> = {
 };
 
 function AsistentePage() {
+  const queryClient = useQueryClient();
+
   const { data: works, isLoading } = useQuery({
     queryKey: ["works", "assistant"],
     queryFn: async () => {
@@ -71,6 +81,48 @@ function AsistentePage() {
     },
   });
 
+  const { data: feedback } = useQuery({
+    queryKey: ["mie_feedback"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("mie_feedback").select("*");
+      if (error) throw error;
+      return data as MieFeedback[];
+    },
+  });
+
+  const { data: memories } = useQuery({
+    queryKey: ["mie_memory"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("mie_memory").select("*");
+      if (error) throw error;
+      return data as MieMemory[];
+    },
+  });
+
+  const decide = useMutation({
+    mutationFn: async (input: { workId: string; code: string; decision: "accepted" | "dismissed" }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Sin sesión");
+      const { error } = await supabase.from("mie_feedback").upsert(
+        {
+          user_id: userData.user.id,
+          work_id: input.workId,
+          code: input.code,
+          decision: input.decision,
+        },
+        { onConflict: "user_id,work_id,code" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: (_d, input) => {
+      toast.success(
+        input.decision === "dismissed" ? "No volveré a sugerirlo aquí" : "Aprendido: lo priorizaré",
+      );
+      queryClient.invalidateQueries({ queryKey: ["mie_feedback"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const eventsByWork = new Map<string, MieEvent[]>();
   for (const e of events ?? []) {
     if (!e.work_id) continue;
@@ -79,20 +131,32 @@ function AsistentePage() {
     eventsByWork.set(e.work_id, list);
   }
 
-  const analyses = (works ?? []).map((w) => ({
-    work: w,
-    ...suggestForWork(w, w.collaborators, eventsByWork.get(w.id) ?? []),
-  }));
+  const analyses = (works ?? []).map((w) => {
+    const base = suggestForWork(w, w.collaborators, eventsByWork.get(w.id) ?? []);
+    const recent = eventsByWork.get(w.id) ?? [];
+    const lastEvent = recent[recent.length - 1];
+    const daysSince = lastEvent
+      ? (Date.now() - new Date(lastEvent.occurred_at).getTime()) / 86_400_000
+      : 999;
+    return {
+      work: w,
+      ...base,
+      suggestions: rankSuggestions(base.suggestions, {
+        workId: w.id,
+        feedback: feedback ?? [],
+        memories: memories ?? [],
+        recentActivityBoost: daysSince < 7 ? 12 : 0,
+      }),
+    };
+  });
 
   const inbox = analyses
     .filter((a) => a.suggestions.length > 0)
-    .sort((a, b) => {
-      const rank = (level: Suggestion["level"]) =>
-        level === "error" ? 0 : level === "warning" ? 1 : 2;
-      const aTop = Math.min(...a.suggestions.map((s) => rank(s.level)));
-      const bTop = Math.min(...b.suggestions.map((s) => rank(s.level)));
-      return aTop - bTop;
-    });
+    .sort(
+      (a, b) =>
+        Math.max(...b.suggestions.map((s) => s.score)) -
+        Math.max(...a.suggestions.map((s) => s.score)),
+    );
 
   const totalErrors = analyses.reduce(
     (n, a) => n + a.suggestions.filter((s) => s.level === "error").length,
@@ -159,22 +223,69 @@ function AsistentePage() {
                       >
                         <div className="flex items-start gap-2">
                           <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${LEVEL_CLASS[s.level]}`} />
-                          <span className="text-sm">{s.message}</span>
+                          <div>
+                            <span className="text-sm">{s.message}</span>
+                            <p className="text-[11px] text-muted-foreground">
+                              Prioridad {Math.round(s.confidence * 100)}%
+                            </p>
+                          </div>
                         </div>
-                        {s.action ? (
-                          <Button asChild size="sm" variant="ghost">
-                            {s.action.params ? (
-                              <Link
-                                to={s.action.to}
-                                params={s.action.params as { id: string }}
-                              >
-                                {s.action.label}
-                              </Link>
-                            ) : (
-                              <Link to={s.action.to}>{s.action.label}</Link>
-                            )}
+                        <div className="flex shrink-0 items-center gap-1">
+                          {s.action ? (
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                decide.mutate({
+                                  workId: work.id,
+                                  code: s.code,
+                                  decision: "accepted",
+                                })
+                              }
+                            >
+                              {s.action.params ? (
+                                <Link
+                                  to={s.action.to}
+                                  params={s.action.params as { id: string }}
+                                >
+                                  {s.action.label}
+                                </Link>
+                              ) : (
+                                <Link to={s.action.to}>{s.action.label}</Link>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Marcar como resuelto"
+                              onClick={() =>
+                                decide.mutate({
+                                  workId: work.id,
+                                  code: s.code,
+                                  decision: "accepted",
+                                })
+                              }
+                            >
+                              <Check className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label="Descartar sugerencia"
+                            onClick={() =>
+                              decide.mutate({
+                                workId: work.id,
+                                code: s.code,
+                                decision: "dismissed",
+                              })
+                            }
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" />
                           </Button>
-                        ) : null}
+                        </div>
                       </li>
                     );
                   })}
@@ -184,6 +295,11 @@ function AsistentePage() {
           ))}
         </div>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <MieMemoryCard />
+        <SessionNotesCard />
+      </div>
     </div>
   );
 }

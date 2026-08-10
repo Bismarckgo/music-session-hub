@@ -164,6 +164,86 @@ export type Database = {
           },
         ]
       }
+      mie_feedback: {
+        Row: {
+          code: string
+          created_at: string
+          decision: string
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+          work_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+          work_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mie_feedback_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mie_memory: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          key: string
+          last_seen: string
+          observations: number
+          scope: string
+          updated_at: string
+          user_id: string
+          value: Json
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          key: string
+          last_seen?: string
+          observations?: number
+          scope: string
+          updated_at?: string
+          user_id: string
+          value?: Json
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          key?: string
+          last_seen?: string
+          observations?: number
+          scope?: string
+          updated_at?: string
+          user_id?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       publishing_profiles: {
         Row: {
           created_at: string
