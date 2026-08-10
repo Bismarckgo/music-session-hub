@@ -11,7 +11,6 @@ import {
   rankSuggestions,
   type MieFeedback,
   type MieMemory,
-  type RankedSuggestion,
 } from "@/lib/mie/memory";
 import { MieMemoryCard } from "@/components/MieMemoryCard";
 import { SessionNotesCard } from "@/components/SessionNotesCard";
