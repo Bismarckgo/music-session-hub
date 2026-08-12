@@ -29,14 +29,14 @@ describe('identifiers validators', () => {
     expect(r.valid).toBe(false);
   });
 
-  it('valid IPI passes (using known Luhn example 79927398713)', () => {
-    // 79927398713 is a classic Luhn-valid number (11 digits)
-    const r = validateIPI('79927398713');
+  it('valid IPI passes (real-format example starting with 00)', () => {
+    // IPI Name Number: 11 digits. Using a Luhn-valid example that starts with '00'
+    const r = validateIPI('00123456782');
     expect(r.valid).toBe(true);
   });
 
   it('invalid IPI fails', () => {
-    const r = validateIPI('79927398710');
+    const r = validateIPI('00123456780');
     expect(r.valid).toBe(false);
   });
 
