@@ -69,6 +69,131 @@ export type Database = {
             referencedRelation: "works"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "collaborators_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      composition_shares: {
+        Row: {
+          composition_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string | null
+          person_id: string | null
+          publisher_share: number
+          role: string
+          territory: string
+          user_id: string
+          writer_share: number
+        }
+        Insert: {
+          composition_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          person_id?: string | null
+          publisher_share?: number
+          role: string
+          territory?: string
+          user_id: string
+          writer_share?: number
+        }
+        Update: {
+          composition_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          person_id?: string | null
+          publisher_share?: number
+          role?: string
+          territory?: string
+          user_id?: string
+          writer_share?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "composition_shares_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "compositions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "composition_shares_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["composition_id"]
+          },
+          {
+            foreignKeyName: "composition_shares_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compositions: {
+        Row: {
+          bpm: number | null
+          created_at: string
+          genre: string | null
+          id: string
+          iswc: string | null
+          musical_key: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          work_id: string | null
+        }
+        Insert: {
+          bpm?: number | null
+          created_at?: string
+          genre?: string | null
+          id?: string
+          iswc?: string | null
+          musical_key?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          work_id?: string | null
+        }
+        Update: {
+          bpm?: number | null
+          created_at?: string
+          genre?: string | null
+          id?: string
+          iswc?: string | null
+          musical_key?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compositions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compositions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contacts: {
@@ -162,6 +287,13 @@ export type Database = {
             referencedRelation: "works"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mie_events_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       mie_feedback: {
@@ -201,6 +333,13 @@ export type Database = {
             columns: ["work_id"]
             isOneToOne: false
             referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mie_feedback_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
             referencedColumns: ["id"]
           },
         ]
@@ -286,6 +425,153 @@ export type Database = {
         }
         Relationships: []
       }
+      recording_shares: {
+        Row: {
+          artist_share: number
+          created_at: string
+          id: string
+          is_active: boolean
+          label_share: number
+          name: string | null
+          person_id: string | null
+          points_type: string
+          producer_points: number
+          recording_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          artist_share?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_share?: number
+          name?: string | null
+          person_id?: string | null
+          points_type?: string
+          producer_points?: number
+          recording_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          artist_share?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_share?: number
+          name?: string | null
+          person_id?: string | null
+          points_type?: string
+          producer_points?: number
+          recording_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_shares_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recording_shares_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recording_shares_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["recording_id"]
+          },
+        ]
+      }
+      recordings: {
+        Row: {
+          channel_links: Json
+          composition_id: string | null
+          cover_path: string | null
+          created_at: string
+          distribution_status: string
+          distributor_name: string | null
+          distributor_url: string | null
+          duration_sec: number | null
+          id: string
+          isrc: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          work_id: string | null
+        }
+        Insert: {
+          channel_links?: Json
+          composition_id?: string | null
+          cover_path?: string | null
+          created_at?: string
+          distribution_status?: string
+          distributor_name?: string | null
+          distributor_url?: string | null
+          duration_sec?: number | null
+          id?: string
+          isrc?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          work_id?: string | null
+        }
+        Update: {
+          channel_links?: Json
+          composition_id?: string | null
+          cover_path?: string | null
+          created_at?: string
+          distribution_status?: string
+          distributor_name?: string | null
+          distributor_url?: string | null
+          duration_sec?: number | null
+          id?: string
+          isrc?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "compositions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recordings_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["composition_id"]
+          },
+          {
+            foreignKeyName: "recordings_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recordings_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       release_tracks: {
         Row: {
           created_at: string
@@ -340,6 +626,13 @@ export type Database = {
             columns: ["work_id"]
             isOneToOne: false
             referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_tracks_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
             referencedColumns: ["id"]
           },
         ]
@@ -466,6 +759,13 @@ export type Database = {
             referencedRelation: "works"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "royalty_lines_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       royalty_reports: {
@@ -552,6 +852,13 @@ export type Database = {
             referencedRelation: "works"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sessions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       work_registrations: {
@@ -602,6 +909,13 @@ export type Database = {
             referencedRelation: "works"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "work_registrations_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       work_versions: {
@@ -647,6 +961,13 @@ export type Database = {
             columns: ["work_id"]
             isOneToOne: false
             referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_versions_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works_view"
             referencedColumns: ["id"]
           },
         ]
@@ -716,7 +1037,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      works_view: {
+        Row: {
+          bpm: number | null
+          channel_links: Json | null
+          channels: string[] | null
+          composition_id: string | null
+          cover_path: string | null
+          created_at: string | null
+          distribution_status: string | null
+          distributor_name: string | null
+          distributor_url: string | null
+          duration_sec: number | null
+          fingerprint: string | null
+          genre: string | null
+          id: string | null
+          isrc: string | null
+          iswc: string | null
+          musical_key: string | null
+          recording_id: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
