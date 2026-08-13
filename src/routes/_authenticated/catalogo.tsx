@@ -1,24 +1,49 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Hash, Search, ArrowUpDown, Upload, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
+import {
+  ArrowUpDown,
+  Copy,
+  ExternalLink,
+  FileSpreadsheet,
+  Filter,
+  Hash,
+  Image as ImageIcon,
+  LayoutGrid,
+  Music2,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Rows3,
+  Search,
+  Upload,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { emit } from "@/lib/mie/events";
+import { WORK_STATUSES, type Collaborator, type StudioSession, type Work } from "@/lib/catalog";
 import {
-  STATUS_CLASSES,
-  STATUS_LABELS,
-  WORK_STATUSES,
-  type Collaborator,
-  type StudioSession,
-  type Work,
-} from "@/lib/catalog";
+  isWriterRole,
+  workFacets,
+  type CompositionShareLike,
+  type WorkFacets,
+} from "@/lib/cst-status";
 import { useCoverUrls } from "@/hooks/use-cover-urls";
+import { StatusPill } from "@/components/CstStatus";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -32,7 +57,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -42,7 +66,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -51,12 +74,70 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
   component: Catalogo,
 });
 
+type CompositionRow = {
+  id: string;
+  iswc: string | null;
+  composition_shares: CompositionShareLike[];
+};
+
 type WorkRow = Work & {
   collaborators: Collaborator[];
   sessions: StudioSession[];
+  recordings: { id: string; isrc: string | null; distribution_status: string }[];
+  compositions: CompositionRow[];
+  work_registrations: { platform: string; status: string }[];
 };
 
 type SortKey = "activity" | "title" | "status";
+
+const FILTER_GROUPS = [
+  {
+    key: "status" as const,
+    label: "Estado",
+    options: [
+      { value: "draft", label: "Borrador" },
+      { value: "attention", label: "Atención" },
+      { value: "complete", label: "Lista" },
+    ],
+  },
+  {
+    key: "type" as const,
+    label: "Tipo",
+    options: [
+      { value: "composition", label: "Composición" },
+      { value: "recording", label: "Grabación" },
+      { value: "release", label: "Release" },
+    ],
+  },
+  {
+    key: "people" as const,
+    label: "Personas",
+    options: [
+      { value: "writer", label: "Compositor" },
+      { value: "producer", label: "Productor" },
+      { value: "artist", label: "Artista" },
+    ],
+  },
+  {
+    key: "registration" as const,
+    label: "Registro",
+    options: [
+      { value: "missing", label: "Faltante" },
+      { value: "submitted", label: "Enviado" },
+      { value: "complete", label: "Completo" },
+    ],
+  },
+];
+
+type FilterKey = (typeof FILTER_GROUPS)[number]["key"];
+type FilterState = Record<FilterKey, string[]>;
+
+const EMPTY_FILTERS: FilterState = {
+  status: [],
+  type: [],
+  people: [],
+  registration: [],
+};
 
 function relativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -75,43 +156,56 @@ function lastActivity(w: WorkRow): { when: string; label: string } {
   type Ev = { when: string; label: string };
   const events: Ev[] = [{ when: w.updated_at, label: "Metadata editada" }];
   for (const s of w.sessions) events.push({ when: s.started_at, label: "Nueva sesión" });
-  for (const c of w.collaborators)
-    events.push({ when: c.created_at, label: "Nuevo colaborador" });
+  for (const c of w.collaborators) events.push({ when: c.created_at, label: "Nuevo colaborador" });
   events.sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
   return events[0];
 }
 
-function formatDuration(mins: number) {
-  if (!mins) return "—";
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+function facetsOf(w: WorkRow): WorkFacets {
+  const composition = w.compositions?.[0];
+  return workFacets({
+    work: w,
+    collaborators: w.collaborators,
+    shares: composition?.composition_shares ?? [],
+    hasComposition: Boolean(composition),
+    recordings: w.recordings ?? [],
+    registrations: w.work_registrations ?? [],
+  });
 }
+
+type Draft = {
+  title: string;
+  genre: string;
+  bpm: string;
+  musicalKey: string;
+  isrc: string;
+  iswc: string;
+};
+
+const EMPTY_DRAFT: Draft = { title: "", genre: "", bpm: "", musicalKey: "", isrc: "", iswc: "" };
 
 function Catalogo() {
   const { nueva } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(Boolean(nueva));
-  const [title, setTitle] = useState("");
-  const [genre, setGenre] = useState("");
-  const [bpm, setBpm] = useState("");
-  const [musicalKey, setMusicalKey] = useState("");
-  const [isrc, setIsrc] = useState("");
-  const [iswc, setIswc] = useState("");
+  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("__all");
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [sortKey, setSortKey] = useState<SortKey>("activity");
+  const [view, setView] = useState<"table" | "cards">("table");
 
   const { data: works, isLoading } = useQuery({
     queryKey: ["works", "catalog"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("works")
-        .select("*, collaborators(*), sessions(*)")
+        .select(
+          "*, collaborators(*), sessions(*), recordings(id, isrc, distribution_status), compositions(id, iswc, composition_shares(*)), work_registrations(platform, status)",
+        )
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      return data as WorkRow[];
+      return data as unknown as WorkRow[];
     },
   });
 
@@ -125,12 +219,12 @@ function Catalogo() {
         .from("works")
         .insert({
           user_id: userData.user.id,
-          title,
-          genre: genre || null,
-          bpm: bpm ? Number(bpm) : null,
-          musical_key: musicalKey || null,
-          isrc: isrc || null,
-          iswc: iswc || null,
+          title: draft.title,
+          genre: draft.genre || null,
+          bpm: draft.bpm ? Number(draft.bpm) : null,
+          musical_key: draft.musicalKey || null,
+          isrc: draft.isrc || null,
+          iswc: draft.iswc || null,
         })
         .select()
         .single();
@@ -154,6 +248,7 @@ function Catalogo() {
       }
       toast.success(`Obra creada con CSTID ${work.fingerprint}`);
       setOpen(false);
+      setDraft(EMPTY_DRAFT);
       navigate({ to: "/obras/$id", params: { id: work.id } });
     },
     onError: () => toast.error("No se pudo crear la obra"),
@@ -162,21 +257,43 @@ function Catalogo() {
   const rows = useMemo(() => {
     const list = (works ?? []).map((w) => {
       const artist = w.collaborators.find((c) => c.role === "Artista principal");
-      const durationMin = w.sessions.reduce(
-        (a, s) => a + (s.duration_minutes ?? 0),
-        0,
-      );
       const activity = lastActivity(w);
-      return { work: w, artist, durationMin, activity };
+      return { work: w, artist, activity, facets: facetsOf(w) };
     });
-    const filtered = list.filter(({ work, artist }) => {
-      if (statusFilter !== "__all" && work.status !== statusFilter) return false;
+    const filtered = list.filter(({ work, artist, facets }) => {
+      if (filters.status.length && !filters.status.includes(facets.overall.state)) return false;
+      if (filters.type.length) {
+        const types: string[] = [];
+        if (work.compositions?.length || work.iswc) types.push("composition");
+        if (work.recordings?.length || work.isrc) types.push("recording");
+        if (work.distribution_status !== "sin_distribuir") types.push("release");
+        if (!filters.type.some((t) => types.includes(t))) return false;
+      }
+      if (filters.people.length) {
+        const roles = work.collaborators.map((c) => c.role);
+        const people: string[] = [];
+        if (roles.some(isWriterRole)) people.push("writer");
+        if (roles.some((r) => /productor|producer|beatmaker/i.test(r))) people.push("producer");
+        if (roles.some((r) => /artista|artist|featuring/i.test(r))) people.push("artist");
+        if (!filters.people.some((p) => people.includes(p))) return false;
+      }
+      if (filters.registration.length) {
+        const { state, total, complete } = facets.registration;
+        const bucket =
+          total === 0
+            ? "missing"
+            : complete === total && state === "complete"
+              ? "complete"
+              : "submitted";
+        if (!filters.registration.includes(bucket)) return false;
+      }
       if (q) {
         const needle = q.toLowerCase();
         const hay = [
           work.title,
           work.fingerprint,
           work.isrc ?? "",
+          work.iswc ?? "",
           work.genre ?? "",
           artist?.name ?? "",
         ]
@@ -188,107 +305,134 @@ function Catalogo() {
     });
     if (sortKey === "title") filtered.sort((a, b) => a.work.title.localeCompare(b.work.title));
     if (sortKey === "status")
-      filtered.sort((a, b) => (a.work.status ?? "").localeCompare(b.work.status ?? ""));
+      filtered.sort((a, b) => a.facets.overall.state.localeCompare(b.facets.overall.state));
     if (sortKey === "activity")
       filtered.sort(
-        (a, b) =>
-          new Date(b.activity.when).getTime() - new Date(a.activity.when).getTime(),
+        (a, b) => new Date(b.activity.when).getTime() - new Date(a.activity.when).getTime(),
       );
     return filtered;
-  }, [works, q, statusFilter, sortKey]);
+  }, [works, q, filters, sortKey]);
+
+  const activeFilters = Object.values(filters).reduce((a, v) => a + v.length, 0);
+
+  const toggleFilter = (key: FilterKey, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(value)
+        ? prev[key].filter((v) => v !== value)
+        : [...prev[key], value],
+    }));
+  };
+
+  const duplicate = (w: WorkRow) => {
+    setDraft({
+      title: `${w.title} (copia)`,
+      genre: w.genre ?? "",
+      bpm: w.bpm != null ? String(w.bpm) : "",
+      musicalKey: w.musical_key ?? "",
+      isrc: "",
+      iswc: "",
+    });
+    setOpen(true);
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Catálogo</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Catálogo</h1>
           <p className="text-sm text-muted-foreground">
             Cada obra recibe un CSTID permanente que representa su historia completa.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-1 h-4 w-4" /> Nueva obra
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nueva obra</DialogTitle>
-              <DialogDescription>
-                El CSTID se genera automáticamente y acompañará a la obra durante toda su vida.
-              </DialogDescription>
-            </DialogHeader>
-            <form
-              className="space-y-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                createWork.mutate();
-              }}
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="w-title">Título *</Label>
-                <Input id="w-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="w-genre">Género</Label>
-                  <Input id="w-genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="w-bpm">BPM</Label>
-                  <Input id="w-bpm" type="number" min={1} value={bpm} onChange={(e) => setBpm(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="w-key">Tonalidad</Label>
-                  <Input id="w-key" placeholder="Ej: Am" value={musicalKey} onChange={(e) => setMusicalKey(e.target.value)} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="w-isrc">ISRC</Label>
-                  <Input id="w-isrc" placeholder="Opcional" value={isrc} onChange={(e) => setIsrc(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="w-iswc">ISWC</Label>
-                  <Input id="w-iswc" placeholder="Opcional" value={iswc} onChange={(e) => setIswc(e.target.value)} />
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={createWork.isPending}>
-                {createWork.isPending ? "Creando…" : "Crear obra"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={() => {
+            setDraft(EMPTY_DRAFT);
+            setOpen(true);
+          }}
+        >
+          <Plus className="mr-1 h-4 w-4" /> Nueva obra
+        </Button>
       </div>
+
+      <NuevaObraDialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setDraft(EMPTY_DRAFT);
+        }}
+        draft={draft}
+        setDraft={setDraft}
+        onSubmit={() => createWork.mutate()}
+        pending={createWork.isPending}
+      />
 
       <CSVImport />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título, artista, CSTID o ISRC"
+            placeholder="Buscar título, creador, ISRC, ISWC…"
             className="pl-8"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
-        <div className="w-44">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">Todos los estados</SelectItem>
-              {WORK_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_LABELS[s]}
-                </SelectItem>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline">
+              <Filter className="mr-1 h-4 w-4" />
+              Filtros
+              {activeFilters > 0 && (
+                <span className="ml-1.5 rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                  {activeFilters}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-[min(90vw,34rem)]">
+            <div className="grid gap-4 sm:grid-cols-4">
+              {FILTER_GROUPS.map((group) => (
+                <div key={group.key} className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {group.label}
+                  </p>
+                  {group.options.map((opt) => {
+                    const id = `f-${group.key}-${opt.value}`;
+                    return (
+                      <div key={opt.value} className="flex items-center gap-2">
+                        <Checkbox
+                          id={id}
+                          checked={filters[group.key].includes(opt.value)}
+                          onCheckedChange={() => toggleFilter(group.key, opt.value)}
+                        />
+                        <Label htmlFor={id} className="cursor-pointer text-sm font-normal">
+                          {opt.label}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
+            </div>
+            {activeFilters > 0 && (
+              <>
+                <Separator className="my-3" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setFilters(EMPTY_FILTERS)}
+                >
+                  Limpiar filtros
+                </Button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+
         <div className="w-44">
           <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
             <SelectTrigger>
@@ -302,102 +446,389 @@ function Catalogo() {
             </SelectContent>
           </Select>
         </div>
+
+        <ToggleGroup
+          type="single"
+          value={view}
+          onValueChange={(v) => v && setView(v as "table" | "cards")}
+          variant="outline"
+        >
+          <ToggleGroupItem value="table" aria-label="Vista de tabla">
+            <Rows3 className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="cards" aria-label="Vista de tarjetas">
+            <LayoutGrid className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
-      <div className="rounded-xl border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Artista</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>ISRC</TableHead>
-              <TableHead className="hidden sm:table-cell">Duración</TableHead>
-              <TableHead className="hidden sm:table-cell">Género</TableHead>
-              <TableHead className="hidden md:table-cell">Actividad</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+      {view === "table" ? (
+        <div className="overflow-x-auto rounded-xl border bg-card">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  Cargando…
-                </TableCell>
+                <TableHead className="text-xs uppercase tracking-wide">Título</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Artista</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Estado</TableHead>
+                <TableHead className="hidden text-xs uppercase tracking-wide lg:table-cell">
+                  Composición
+                </TableHead>
+                <TableHead className="hidden text-xs uppercase tracking-wide lg:table-cell">
+                  Grabación
+                </TableHead>
+                <TableHead className="hidden text-xs uppercase tracking-wide md:table-cell">
+                  Splits
+                </TableHead>
+                <TableHead className="hidden text-xs uppercase tracking-wide md:table-cell">
+                  Registro
+                </TableHead>
+                <TableHead className="hidden text-xs uppercase tracking-wide xl:table-cell">
+                  Actualización
+                </TableHead>
+                <TableHead className="w-[1%] text-right" />
               </TableRow>
-            ) : rows.length > 0 ? (
-              rows.map(({ work: w, artist, durationMin, activity }) => (
-                <TableRow key={w.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-secondary">
-                        {w.cover_path && coverMap?.[w.cover_path] ? (
-                          <img
-                            src={coverMap[w.cover_path]}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                            <ImageIcon className="h-4 w-4" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <Link
-                          to="/obras/$id"
-                          params={{ id: w.id }}
-                          className="font-medium hover:text-primary"
-                        >
-                          {w.title}
-                        </Link>
-                        <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
-                          <Hash className="h-3 w-3" /> {w.fingerprint}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {artist ? (
-                      <span className="text-sm">{artist.name}</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={STATUS_CLASSES[w.status] ?? ""}>
-                      {STATUS_LABELS[w.status] ?? w.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {w.isrc ? (
-                      <span className="font-mono text-xs">{w.isrc}</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Pendiente</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
-                    {formatDuration(durationMin)}
-                  </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
-                    {w.genre ?? "—"}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <p className="text-sm">{activity.label}</p>
-                    <p className="text-xs text-muted-foreground">{relativeTime(activity.when)}</p>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                    Cargando…
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  Tu catálogo está vacío. Crea tu primera obra para generar su CSTID.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : rows.length > 0 ? (
+                rows.map(({ work: w, artist, activity, facets }) => (
+                  <TableRow
+                    key={w.id}
+                    className="group transition-shadow hover:bg-secondary/40 hover:shadow-sm"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Cover work={w} url={coverMap?.[w.cover_path ?? ""]} />
+                        <div>
+                          <Link
+                            to="/obras/$id"
+                            params={{ id: w.id }}
+                            className="font-medium hover:text-primary"
+                          >
+                            {w.title}
+                          </Link>
+                          <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                            <Hash className="h-3 w-3" /> {w.fingerprint}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {artist ? (
+                        <span className="text-sm">{artist.name}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <StatusPill
+                        state={facets.overall.state}
+                        label={facets.overall.label}
+                        title={facets.overall.detail}
+                      />
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <StatusPill
+                        state={facets.composition.state}
+                        label={facets.composition.label}
+                        title={facets.composition.detail}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <StatusPill
+                        state={facets.recording.state}
+                        label={facets.recording.label}
+                        title={facets.recording.detail}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <StatusPill
+                        state={facets.splits.state}
+                        label={facets.splits.label}
+                        title={facets.splits.detail}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <StatusPill
+                        state={facets.registration.state}
+                        label={facets.registration.label}
+                        title={facets.registration.detail}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <p className="text-sm">{activity.label}</p>
+                      <p className="text-xs text-muted-foreground">{relativeTime(activity.when)}</p>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RowActions work={w} onDuplicate={() => duplicate(w)} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    {activeFilters > 0 || q
+                      ? "Ninguna obra coincide con los filtros aplicados."
+                      : "Tu catálogo está vacío. Crea tu primera obra para generar su CSTID."}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Cargando…</p>
+          ) : rows.length > 0 ? (
+            rows.map(({ work: w, artist, activity, facets }) => (
+              <div
+                key={w.id}
+                className="group space-y-3 rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <Cover work={w} url={coverMap?.[w.cover_path ?? ""]} size="lg" />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to="/obras/$id"
+                      params={{ id: w.id }}
+                      className="block truncate font-medium hover:text-primary"
+                    >
+                      {w.title}
+                    </Link>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {artist?.name ?? "Sin artista principal"}
+                    </p>
+                    <p className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                      <Hash className="h-3 w-3" /> {w.fingerprint}
+                    </p>
+                  </div>
+                  <RowActions work={w} onDuplicate={() => duplicate(w)} alwaysVisible />
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <StatusPill state={facets.overall.state} label={facets.overall.label} size="sm" />
+                  <StatusPill
+                    state={facets.composition.state}
+                    label={`Composición · ${facets.composition.label}`}
+                    size="sm"
+                  />
+                  <StatusPill
+                    state={facets.recording.state}
+                    label={`Grabación · ${facets.recording.label}`}
+                    size="sm"
+                  />
+                  <StatusPill
+                    state={facets.splits.state}
+                    label={`Splits · ${facets.splits.label}`}
+                    size="sm"
+                  />
+                  <StatusPill
+                    state={facets.registration.state}
+                    label={`Registro · ${facets.registration.label}`}
+                    size="sm"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {activity.label} · {relativeTime(activity.when)}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {activeFilters > 0 || q
+                ? "Ninguna obra coincide con los filtros aplicados."
+                : "Tu catálogo está vacío. Crea tu primera obra para generar su CSTID."}
+            </p>
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+function Cover({ work, url, size = "md" }: { work: Work; url?: string; size?: "md" | "lg" }) {
+  const box = size === "lg" ? "h-14 w-14" : "h-10 w-10";
+  return (
+    <div className={`${box} shrink-0 overflow-hidden rounded-md border bg-secondary`}>
+      {url ? (
+        <img src={url} alt={`Carátula de ${work.title}`} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+          <ImageIcon className="h-4 w-4" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RowActions({
+  work,
+  onDuplicate,
+  alwaysVisible = false,
+}: {
+  work: WorkRow;
+  onDuplicate: () => void;
+  alwaysVisible?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-end gap-1 transition-opacity focus-within:opacity-100 group-hover:opacity-100 ${
+        alwaysVisible ? "" : "opacity-0"
+      }`}
+    >
+      <Button asChild size="sm" variant="secondary">
+        <Link to="/obras/$id" params={{ id: work.id }}>
+          Abrir
+        </Link>
+      </Button>
+      <Button asChild size="sm" variant="ghost" title="Editar">
+        <Link to="/obras/$id" params={{ id: work.id }} hash="composition">
+          <Pencil className="h-3.5 w-3.5" />
+        </Link>
+      </Button>
+      <Button size="sm" variant="ghost" title="Duplicar" onClick={onDuplicate}>
+        <Copy className="h-3.5 w-3.5" />
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="ghost" title="Más acciones">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => {
+              navigator.clipboard.writeText(work.fingerprint);
+              toast.success("CSTID copiado");
+            }}
+          >
+            <Hash className="mr-2 h-4 w-4" /> Copiar CSTID
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!work.isrc}
+            onClick={() => {
+              if (!work.isrc) return;
+              navigator.clipboard.writeText(work.isrc);
+              toast.success("ISRC copiado");
+            }}
+          >
+            <Music2 className="mr-2 h-4 w-4" /> Copiar ISRC
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/registros">
+              <ExternalLink className="mr-2 h-4 w-4" /> Ver registros
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+function NuevaObraDialog({
+  open,
+  onOpenChange,
+  draft,
+  setDraft,
+  onSubmit,
+  pending,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  draft: Draft;
+  setDraft: (d: Draft) => void;
+  onSubmit: () => void;
+  pending: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nueva obra</DialogTitle>
+          <DialogDescription>
+            El CSTID se genera automáticamente y acompañará a la obra durante toda su vida.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit();
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="w-title">Título *</Label>
+            <Input
+              id="w-title"
+              required
+              value={draft.title}
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="w-genre">Género</Label>
+              <Input
+                id="w-genre"
+                value={draft.genre}
+                onChange={(e) => setDraft({ ...draft, genre: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="w-bpm">BPM</Label>
+              <Input
+                id="w-bpm"
+                type="number"
+                min={1}
+                value={draft.bpm}
+                onChange={(e) => setDraft({ ...draft, bpm: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="w-key">Tonalidad</Label>
+              <Input
+                id="w-key"
+                placeholder="Ej: Am"
+                value={draft.musicalKey}
+                onChange={(e) => setDraft({ ...draft, musicalKey: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="w-isrc">ISRC</Label>
+              <Input
+                id="w-isrc"
+                placeholder="Opcional"
+                value={draft.isrc}
+                onChange={(e) => setDraft({ ...draft, isrc: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="w-iswc">ISWC</Label>
+              <Input
+                id="w-iswc"
+                placeholder="Opcional"
+                value={draft.iswc}
+                onChange={(e) => setDraft({ ...draft, iswc: e.target.value })}
+              />
+            </div>
+          </div>
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Creando…" : "Crear obra"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -472,9 +903,7 @@ function CSVImport() {
       const userId = userData.user.id;
 
       // Fetch existing works to skip duplicates by title (case-insensitive) or ISRC
-      const { data: existing } = await supabase
-        .from("works")
-        .select("title, isrc");
+      const { data: existing } = await supabase.from("works").select("title, isrc");
       const existingTitles = new Set((existing ?? []).map((w) => w.title.toLowerCase()));
       const existingIsrcs = new Set(
         (existing ?? []).map((w) => w.isrc).filter(Boolean) as string[],
@@ -549,7 +978,8 @@ function CSVImport() {
         <div>
           <p className="text-sm font-medium">Importar catálogo desde CSV</p>
           <p className="text-xs text-muted-foreground">
-            Columnas soportadas: title, isrc, iswc, genre, bpm, key, status. Se omiten títulos e ISRC duplicados.
+            Columnas soportadas: title, isrc, iswc, genre, bpm, key, status. Se omiten títulos e
+            ISRC duplicados.
           </p>
         </div>
       </div>

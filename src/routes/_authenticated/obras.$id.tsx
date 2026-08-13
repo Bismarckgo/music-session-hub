@@ -11,6 +11,20 @@ import { emit } from "@/lib/mie/events";
 import { MieTimelineCard } from "@/components/MieTimelineCard";
 import { EnrichCard } from "@/components/EnrichCard";
 import { WorkVersionsCard } from "@/components/WorkVersionsCard";
+import { RegistrationsPanel } from "@/components/RegistrationsPanel";
+import { StatusPill, StatusRow } from "@/components/CstStatus";
+import { CompositionTab } from "@/components/work/CompositionTab";
+import { CreditsTab } from "@/components/work/CreditsTab";
+import { SplitsTab } from "@/components/work/SplitsTab";
+import { RecordingsCard } from "@/components/work/RecordingsCard";
+import { getCompositionByWork, listCompositionShares } from "@/lib/data/compositions";
+import {
+  listRecordingShares,
+  listRecordingsByWork,
+  type RecordingShare,
+} from "@/lib/data/recordings";
+import { listRegistrationsByWork } from "@/lib/data/registrations";
+import { nextAction, workFacets } from "@/lib/cst-status";
 import {
   CHANNELS,
   CHANNEL_URL_PATTERNS,
@@ -36,6 +50,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -59,6 +74,7 @@ export const Route = createFileRoute("/_authenticated/obras/$id")({
 function ObraDetail() {
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState("overview");
 
   const { data: work, isLoading } = useQuery({
     queryKey: ["works", id],
@@ -102,6 +118,38 @@ function ObraDetail() {
       if (error) throw error;
       return data as Contact[];
     },
+  });
+
+  const { data: composition } = useQuery({
+    queryKey: ["compositions", id],
+    queryFn: () => getCompositionByWork(id),
+  });
+
+  const { data: compositionShares } = useQuery({
+    queryKey: ["composition_shares", composition?.id ?? null],
+    enabled: Boolean(composition?.id),
+    queryFn: () => listCompositionShares(composition!.id),
+  });
+
+  const { data: recordings } = useQuery({
+    queryKey: ["recordings", id],
+    queryFn: () => listRecordingsByWork(id),
+  });
+
+  const { data: recordingShares } = useQuery({
+    queryKey: ["recording_shares", id, (recordings ?? []).map((r) => r.id).join(",")],
+    enabled: (recordings ?? []).length > 0,
+    queryFn: async () => {
+      const entries = await Promise.all(
+        (recordings ?? []).map(async (r) => [r.id, await listRecordingShares(r.id)] as const),
+      );
+      return Object.fromEntries(entries) as Record<string, RecordingShare[]>;
+    },
+  });
+
+  const { data: registrations } = useQuery({
+    queryKey: ["work_registrations", id],
+    queryFn: () => listRegistrationsByWork(id),
   });
 
   const updateWork = useMutation({
@@ -149,6 +197,16 @@ function ObraDetail() {
   }
 
   const totalSplit = (collaborators ?? []).reduce((acc, c) => acc + Number(c.split_percent), 0);
+  const allRecordingShares = Object.values(recordingShares ?? {}).flat();
+  const facets = workFacets({
+    work,
+    collaborators: collaborators ?? [],
+    shares: compositionShares ?? [],
+    hasComposition: Boolean(composition),
+    recordings: recordings ?? [],
+    registrations: registrations ?? [],
+  });
+  const suggestion = nextAction(facets);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -160,7 +218,17 @@ function ObraDetail() {
         <div className="flex items-center gap-4">
           <CoverThumb work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
           <div>
-            <h1 className="text-2xl font-bold">{work.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold">{work.title}</h1>
+              <StatusPill
+                state={facets.overall.state}
+                label={facets.overall.label}
+                title={facets.overall.detail}
+              />
+            </div>
+            {suggestion && (
+              <p className="mt-1 text-sm text-muted-foreground">{suggestion.message}</p>
+            )}
             <button
               onClick={copyCstid}
               className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs transition-colors hover:bg-accent"
@@ -206,24 +274,107 @@ function ObraDetail() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <MetadataCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+        <TabsList className="flex w-full flex-wrap justify-start">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="composition">Composición</TabsTrigger>
+          <TabsTrigger value="recording">Grabación</TabsTrigger>
+          <TabsTrigger value="credits">Créditos</TabsTrigger>
+          <TabsTrigger value="splits">Splits</TabsTrigger>
+          <TabsTrigger value="records">Registros</TabsTrigger>
+        </TabsList>
 
-        <ChannelsCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Estado de la obra</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-x-8 sm:grid-cols-2">
+              <StatusRow
+                label="Composición"
+                state={facets.composition.state}
+                value={facets.composition.label}
+                onClick={() => setTab("composition")}
+              />
+              <StatusRow
+                label="Grabación"
+                state={facets.recording.state}
+                value={facets.recording.label}
+                onClick={() => setTab("recording")}
+              />
+              <StatusRow
+                label="Splits"
+                state={facets.splits.state}
+                value={facets.splits.label}
+                onClick={() => setTab("splits")}
+              />
+              <StatusRow
+                label="Registros"
+                state={facets.registration.state}
+                value={facets.registration.label}
+                onClick={() => setTab("records")}
+              />
+            </CardContent>
+          </Card>
 
-        <DistributionCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <MetadataCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+            <EnrichCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+            <MieTimelineCard workId={id} />
+          </div>
+        </TabsContent>
 
-        <CollaboratorsCard
-          workId={id}
-          collaborators={collaborators ?? []}
-          contacts={contacts ?? []}
-          totalSplit={totalSplit}
-        />
-        <SessionsCard workId={id} sessions={sessions ?? []} />
-        <WorkVersionsCard workId={id} />
-        <EnrichCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
-        <MieTimelineCard workId={id} />
-      </div>
+        <TabsContent value="composition">
+          <CompositionTab
+            work={work}
+            composition={composition ?? null}
+            shares={compositionShares ?? []}
+            contacts={contacts ?? []}
+          />
+        </TabsContent>
+
+        <TabsContent value="recording" className="space-y-6">
+          <RecordingsCard
+            work={work}
+            recordings={recordings ?? []}
+            sharesByRecording={recordingShares ?? {}}
+          />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ChannelsCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+            <DistributionCard work={work} onUpdate={(patch) => updateWork.mutate(patch)} />
+            <SessionsCard workId={id} sessions={sessions ?? []} />
+            <WorkVersionsCard workId={id} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="credits" className="space-y-6">
+          <CreditsTab
+            collaborators={collaborators ?? []}
+            shares={compositionShares ?? []}
+            recordingShares={allRecordingShares}
+            contacts={contacts ?? []}
+          />
+          <CollaboratorsCard
+            workId={id}
+            collaborators={collaborators ?? []}
+            contacts={contacts ?? []}
+            totalSplit={totalSplit}
+          />
+        </TabsContent>
+
+        <TabsContent value="splits">
+          <SplitsTab
+            workId={id}
+            compositionId={composition?.id ?? null}
+            shares={compositionShares ?? []}
+            recordingShares={allRecordingShares}
+          />
+        </TabsContent>
+
+        <TabsContent value="records">
+          <RegistrationsPanel workId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
